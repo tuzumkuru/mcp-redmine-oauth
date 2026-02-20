@@ -25,11 +25,11 @@ A remote MCP server that exposes Redmine's REST API to AI agents via OAuth 2.0. 
 2. MCP Client connects to FastMCP and is redirected to Redmine's login/consent page.
 3. After user approval, Redmine sends the authorization code to the FastMCP server's redirect URI.
 4. FastMCP performs the back-channel code exchange using the Client ID and Secret, receiving an Access Token and Refresh Token.
-5. FastMCP returns the tokens to the MCP Client. The client holds and manages its own tokens.
-6. For every subsequent MCP request, the client sends its Access Token as a Bearer token. FastMCP forwards it to Redmine REST API calls.
-7. FastMCP is stateless regarding auth — it does not store tokens. Each MCP client session manages its own token lifecycle, including refresh.
+5. FastMCP stores the Redmine tokens encrypted in a server-side token store. It issues its own short-lived JWT to the MCP client.
+6. The MCP client only ever sees the FastMCP JWT — the Redmine token never leaves the server.
+7. For every subsequent MCP request, the client sends the FastMCP JWT. The server validates it, looks up the corresponding Redmine token, and uses it for Redmine REST API calls. Token refresh is handled transparently by the server.
 
-**Deployment:** Single Redmine instance, URL configured via environment variable. Multi-user: each connected client holds its own token. Initial deployment as a Python process; Docker support to follow.
+**Deployment:** Single Redmine instance, URL configured via environment variable. Multi-user: each client session has its own FastMCP JWT and corresponding stored Redmine token. Initial deployment as a Python process; Docker support to follow.
 
 ---
 

@@ -24,19 +24,17 @@
 
 ### Project Setup
 - [ ] Initialize `pyproject.toml` with dependencies: `fastmcp`, `httpx`, `python-dotenv`
-- [ ] Create `src/redmince/` package structure with empty module files
+- [ ] Create `src/` directory with module files
 - [ ] Create `.env.example` with all required variables
 
 ### FastMCP Server
 - [ ] `server.py`: Create FastMCP app instance with Streamable HTTP transport
-- [ ] `server.py`: Mount `OAuthProxy` and register modules (tools, resources, prompts)
-- [ ] Verify server starts and responds at `http://localhost:8000`
+- [ ] `server.py`: Mount `OAuthProxy` and register tools, resources, prompts
 
 ### OAuth Integration
 - [ ] `auth.py`: Configure `OAuthProxy` pointing to Redmine's authorize and token endpoints
 - [ ] `auth.py`: Wire in `REDMINE_CLIENT_ID`, `REDMINE_CLIENT_SECRET`, and redirect URI
 - [ ] `auth.py`: Set up in-memory token store
-- [ ] Test: full OAuth flow works (authorize → callback → JWT issued to client)
 
 ### Redmine HTTP Client
 - [ ] `client.py`: Async HTTP client using `httpx` with base URL from `REDMINE_URL`
@@ -45,8 +43,7 @@
 
 ### First Tool
 - [ ] `tools.py`: Implement `get_issue_details(issue_id)` — fetches issue with `?include=journals`
-- [ ] Retrieve Redmine token from session via `get_access_token()` and pass to client
-- [ ] Test: calling tool via MCP client returns real Redmine issue data
+- [ ] `tools.py`: Retrieve Redmine token from session via `get_access_token()` and pass to client
 
 ---
 
