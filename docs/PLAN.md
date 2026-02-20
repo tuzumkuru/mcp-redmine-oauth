@@ -23,27 +23,27 @@
 - Auth flow works end-to-end with in-memory token store
 
 ### Project Setup
-- [ ] Initialize `pyproject.toml` with dependencies: `fastmcp`, `httpx`, `python-dotenv`
-- [ ] Create `src/` directory with module files
-- [ ] Create `.env.example` with all required variables
+- [x] Initialize `pyproject.toml` with dependencies: `fastmcp`, `httpx`, `python-dotenv`
+- [x] Create `src/` directory with module files
+- [x] Create `.env.example` with all required variables
 
 ### FastMCP Server
-- [ ] `server.py`: Create FastMCP app instance with Streamable HTTP transport
-- [ ] `server.py`: Mount `OAuthProxy` and register tools, resources, prompts
+- [x] `server.py`: Create FastMCP app instance with Streamable HTTP transport
+- [x] `server.py`: Mount `OAuthProxy` and register tools, resources, prompts
 
 ### OAuth Integration
-- [ ] `auth.py`: Configure `OAuthProxy` pointing to Redmine's authorize and token endpoints
-- [ ] `auth.py`: Wire in `REDMINE_CLIENT_ID`, `REDMINE_CLIENT_SECRET`, and redirect URI
-- [ ] `auth.py`: Set up in-memory token store
+- [x] `auth.py`: Configure `OAuthProxy` pointing to Redmine's authorize and token endpoints
+- [x] `auth.py`: Wire in `REDMINE_CLIENT_ID`, `REDMINE_CLIENT_SECRET`, and redirect URI
+- [x] `auth.py`: Set up in-memory token store (OAuthProxy default)
 
 ### Redmine HTTP Client
-- [ ] `client.py`: Async HTTP client using `httpx` with base URL from `REDMINE_URL`
-- [ ] `client.py`: Accept Bearer token per call; set `Authorization` header automatically
-- [ ] `client.py`: Raise typed errors for 401, 403, 404, 5xx responses
+- [x] `client.py`: Async HTTP client using `httpx` with base URL from `REDMINE_URL`
+- [x] `client.py`: Accept Bearer token per call; set `Authorization` header automatically
+- [x] `client.py`: Raise typed errors for 401, 403, 404, 5xx responses
 
 ### First Tool
-- [ ] `tools.py`: Implement `get_issue_details(issue_id)` — fetches issue with `?include=journals`
-- [ ] `tools.py`: Retrieve Redmine token from session via `get_access_token()` and pass to client
+- [x] `tools.py`: Implement `get_issue_details(issue_id)` — fetches issue with `?include=journals`
+- [x] `tools.py`: Retrieve Redmine token from session via `get_access_token()` and pass to client
 
 ---
 
