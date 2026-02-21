@@ -65,7 +65,7 @@ REDMINE_SCOPES=view_issues view_project
 
 ```bash
 pip install -e .
-python src/server.py
+mcp-redmine-oauth
 ```
 
 The MCP server will be available at `http://localhost:8000/mcp`.
@@ -77,6 +77,16 @@ npx @modelcontextprotocol/inspector
 ```
 
 Open `http://localhost:6274`, set transport to **Streamable HTTP**, and enter `http://localhost:8000/mcp`.
+
+## Running with Docker
+
+```bash
+docker compose up --build
+```
+
+The container reads configuration from `.env`. Make sure `MCP_BASE_URL` is set to the externally-reachable URL of the server (not `localhost` if clients connect from other machines).
+
+Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 
 ## Environment Variables
 

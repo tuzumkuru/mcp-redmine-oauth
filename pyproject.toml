@@ -9,5 +9,8 @@ dependencies = [
     "python-dotenv>=1.1.0",
 ]
 
+[project.scripts]
+mcp-redmine-oauth = "mcp_redmine_oauth.server:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]

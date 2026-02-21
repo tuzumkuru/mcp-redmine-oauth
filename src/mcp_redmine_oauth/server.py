@@ -11,9 +11,9 @@ from fastmcp import FastMCP
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
-from auth import RedmineProvider
-from client import RedmineClient
-from tools import register_tools
+from mcp_redmine_oauth.auth import RedmineProvider
+from mcp_redmine_oauth.client import RedmineClient
+from mcp_redmine_oauth.tools import register_tools
 
 load_dotenv()
 
