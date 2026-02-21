@@ -45,6 +45,9 @@
 - [x] `tools.py`: Implement `get_issue_details(issue_id)` — fetches issue with `?include=journals`
 - [x] `tools.py`: Retrieve Redmine token from session via `get_access_token()` and pass to client
 
+### Auth UX
+- [x] Disable FastMCP authorization consent screen — Redmine login/consent is the real gate; the extra FastMCP screen is redundant friction for a centrally-deployed server
+
 ---
 
 ## Phase 2: Containerization
@@ -159,3 +162,11 @@
 ### Release
 - [ ] Bump version to `1.0.0` in `pyproject.toml`
 - [ ] Tag `v1.0.0` in git
+
+---
+
+## Backlog
+
+Ideas and requests not yet assigned to a phase. Review during phase planning.
+
+- Push repo to GitHub and migrate backlog items to Issues

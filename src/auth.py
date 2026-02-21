@@ -93,7 +93,7 @@ class RedmineProvider(OAuthProxy):
         allowed_client_redirect_uris: list[str] | None = None,
         client_storage: AsyncKeyValue | None = None,
         jwt_signing_key: str | bytes | None = None,
-        require_authorization_consent: bool = True,
+        require_authorization_consent: bool = False,
     ):
         redmine_url = redmine_url.rstrip("/")
 
