@@ -1,6 +1,6 @@
 # Product Requirements Document
 
-## Redmine FastMCP Server
+## Redmine FastMCP Server with OAuth
 
 **Version:** 1.0
 **Stack:** FastMCP 3.0 (Python), Redmine 6.1+
