@@ -1,0 +1,19 @@
+# Development artifacts
+.venv/
+.git/
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Environment files (pass secrets at runtime via env_file or environment)
+.env
+.env.*
+!.env.example
+
+# Docs and tooling
+docs/
+*.md

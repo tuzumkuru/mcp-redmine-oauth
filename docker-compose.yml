@@ -1,0 +1,10 @@
+services:
+  mcp-server:
+    build: .
+    # MCP_HOST_PORT controls which host port maps to the container.
+    # The container always listens on 8000 (MCP_PORT default).
+    ports:
+      - "${MCP_HOST_PORT:-8000}:8000"
+    env_file:
+      - .env
+    restart: unless-stopped
