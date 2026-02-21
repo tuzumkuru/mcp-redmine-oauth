@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 
-from client import RedmineClient, RedmineForbiddenError
+from client import RedmineClient, RedmineForbiddenError, RedmineNotFoundError
 
 
 def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
@@ -28,6 +28,8 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
             )
         except RedmineForbiddenError:
             return f"Error: you do not have permission to view issue #{issue_id}."
+        except RedmineNotFoundError:
+            return f"Error: issue #{issue_id} not found in Redmine."
 
         issue = data.get("issue", {})
         return _format_issue(issue)

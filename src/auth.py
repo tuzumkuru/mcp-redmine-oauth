@@ -88,6 +88,7 @@ class RedmineProvider(OAuthProxy):
         client_id: str,
         client_secret: str,
         base_url: AnyHttpUrl | str,
+        scopes: list[str] | None = None,
         redirect_path: str | None = None,
         allowed_client_redirect_uris: list[str] | None = None,
         client_storage: AsyncKeyValue | None = None,
@@ -97,6 +98,8 @@ class RedmineProvider(OAuthProxy):
         redmine_url = redmine_url.rstrip("/")
 
         token_verifier = RedmineTokenVerifier(redmine_url=redmine_url)
+
+        extra_authorize_params = {"scope": " ".join(scopes)} if scopes else {}
 
         super().__init__(
             upstream_authorization_endpoint=f"{redmine_url}/oauth/authorize",
@@ -111,6 +114,7 @@ class RedmineProvider(OAuthProxy):
             client_storage=client_storage,
             jwt_signing_key=jwt_signing_key,
             require_authorization_consent=require_authorization_consent,
+            extra_authorize_params=extra_authorize_params,
         )
 
         logger.debug(

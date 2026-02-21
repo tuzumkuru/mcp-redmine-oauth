@@ -7,6 +7,8 @@ import os
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 from auth import RedmineProvider
 from client import RedmineClient
@@ -22,16 +24,16 @@ REDMINE_CLIENT_SECRET = os.environ["REDMINE_CLIENT_SECRET"]
 # Optional configuration
 MCP_HOST = os.environ.get("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.environ.get("MCP_PORT", "8000"))
-
-# Build the base URL for OAuth redirect
-BASE_URL = f"http://{MCP_HOST}:{MCP_PORT}"
+MCP_BASE_URL = os.environ.get("MCP_BASE_URL", f"http://localhost:{MCP_PORT}")
+REDMINE_SCOPES = os.environ.get("REDMINE_SCOPES", "").split() or None
 
 # Auth provider
 auth = RedmineProvider(
     redmine_url=REDMINE_URL,
     client_id=REDMINE_CLIENT_ID,
     client_secret=REDMINE_CLIENT_SECRET,
-    base_url=BASE_URL,
+    base_url=MCP_BASE_URL,
+    scopes=REDMINE_SCOPES,
 )
 
 # FastMCP server
@@ -54,6 +56,15 @@ def main() -> None:
             host=MCP_HOST,
             port=MCP_PORT,
             transport="streamable-http",
+            middleware=[
+                Middleware(
+                    CORSMiddleware,
+                    allow_origins=["*"],
+                    allow_methods=["*"],
+                    allow_headers=["*"],
+                    expose_headers=["Mcp-Session-Id"],
+                ),
+            ],
         )
     )
 

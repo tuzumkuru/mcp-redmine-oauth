@@ -17,17 +17,14 @@ class RedmineAPIError(Exception):
 
 class RedmineAuthError(RedmineAPIError):
     """401 Unauthorized — token is invalid or expired."""
-    pass
 
 
 class RedmineForbiddenError(RedmineAPIError):
     """403 Forbidden — user lacks permission for this action."""
-    pass
 
 
 class RedmineNotFoundError(RedmineAPIError):
     """404 Not Found — resource does not exist."""
-    pass
 
 
 class RedmineClient:
@@ -90,9 +87,7 @@ class RedmineClient:
         if response.status_code == 401:
             raise RedmineAuthError(401, "Authentication failed — token may be expired.")
         if response.status_code == 403:
-            raise RedmineForbiddenError(
-                403, "Permission denied — your Redmine account lacks access to this resource."
-            )
+            raise RedmineForbiddenError(403, "Permission denied.")
         if response.status_code == 404:
             raise RedmineNotFoundError(404, "Resource not found in Redmine.")
         if response.status_code >= 500:
