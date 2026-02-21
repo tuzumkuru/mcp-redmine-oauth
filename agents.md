@@ -10,7 +10,7 @@ A remote MCP server built with FastMCP 3.0 (Python) that bridges AI agents to a 
 |---|---|
 | [docs/prd.md](docs/prd.md) | Product requirements: tools, resources, prompts, auth flow, constraints |
 | [docs/architecture.md](docs/architecture.md) | System design: components, OAuth flow, module breakdown, configuration |
-| [docs/plan.md](docs/plan.md) | Phased implementation plan (MVP → V1 → V2) with task checklist |
+| [docs/plan.md](docs/plan.md) | Phased implementation plan (Phase 1 → … → Phase 6) with task checklist |
 
 ---
 
@@ -21,8 +21,8 @@ This project uses a **define-then-build** workflow. No code is written without a
 ### Phase Order
 
 ```
-PRD  →  Architecture  →  Plan  →  MVP  →  V1  →  V2
- (what)     (how)        (when)   ← implementation phases →
+PRD  →  Architecture  →  Plan  →  Phase 1  →  …  →  Phase 6
+ (what)     (how)        (when)   ←── implementation phases ──→
 ```
 
 Each document phase must be complete and agreed upon before the next begins. Each implementation phase must meet its success criteria before the next starts.
