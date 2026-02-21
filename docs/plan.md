@@ -61,8 +61,8 @@
 - Server is reachable from an MCP client when running in a container
 
 ### Docker
-- [ ] Write `Dockerfile` for the MCP server (multi-stage, non-root user)
-- [ ] Write `docker-compose.yml` for the MCP server only (no inspector, no Redmine — those are external)
+- [x] Write `Dockerfile` for the MCP server (multi-stage, non-root user)
+- [x] Write `docker-compose.yml` for the MCP server only (no inspector, no Redmine — those are external)
 - [ ] Test: image builds and server is reachable from an MCP client
 
 ---

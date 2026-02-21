@@ -61,6 +61,8 @@ Client                  FastMCP                 Redmine
 
 ## Module Design
 
+All modules live under the `mcp_redmine_oauth` package (`src/mcp_redmine_oauth/`).
+
 | Module | Responsibility |
 |---|---|
 | `server.py` | FastMCP app entry point; mounts `OAuthProxy`, registers tools/resources/prompts |
@@ -69,6 +71,8 @@ Client                  FastMCP                 Redmine
 | `tools.py` | MCP tools: `get_issue_details`, (planned: `search_issues`, `create_issue`, `update_issue`) |
 | `resources.py` | (planned) MCP resources: `projects/active`, `trackers`, `users/me` |
 | `prompts.py` | (planned) MCP prompts: `summarize_ticket`, `draft_bug_report` |
+
+The package exposes a console entry point `mcp-redmine-oauth` (defined in `pyproject.toml`) that calls `server:main`.
 
 Tools and resources retrieve the current session's Redmine token via FastMCP's `get_access_token()` dependency and pass it to `client.py`.
 

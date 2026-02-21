@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 
-from client import RedmineClient, RedmineForbiddenError, RedmineNotFoundError
+from mcp_redmine_oauth.client import RedmineClient, RedmineForbiddenError, RedmineNotFoundError
 
 
 def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
