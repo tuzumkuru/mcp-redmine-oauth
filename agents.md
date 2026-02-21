@@ -1,4 +1,4 @@
-# Agent Guide — Redmine FastMCP Server
+# Agent Guide — Redmine FastMCP Server with OAuth
 
 ## What This Repo Is
 
@@ -10,7 +10,7 @@ A remote MCP server built with FastMCP 3.0 (Python) that bridges AI agents to a 
 |---|---|
 | [docs/prd.md](docs/prd.md) | Product requirements: tools, resources, prompts, auth flow, constraints |
 | [docs/architecture.md](docs/architecture.md) | System design: components, OAuth flow, module breakdown, configuration |
-| [docs/PLAN.md](docs/PLAN.md) | Phased implementation plan (MVP → V1 → V2) with task checklist |
+| [docs/plan.md](docs/plan.md) | Phased implementation plan (MVP → V1 → V2) with task checklist |
 
 ---
 
@@ -29,7 +29,7 @@ Each document phase must be complete and agreed upon before the next begins. Eac
 
 ### Source of Truth
 
-[docs/PLAN.md](docs/PLAN.md) is the single source of truth for current state. It tracks every task across all phases using status markers:
+[docs/plan.md](docs/plan.md) is the single source of truth for current state. It tracks every task across all phases using status markers:
 
 | Mark | Meaning |
 |---|---|
@@ -41,7 +41,7 @@ Each document phase must be complete and agreed upon before the next begins. Eac
 
 ### Development Loop
 
-1. Open `PLAN.md` — identify the current phase and the next open task.
+1. Open `plan.md` — identify the current phase and the next open task.
 2. Consult the relevant doc (`prd.md` for features, `architecture.md` for structure).
 3. Mark the task `[-]`, implement it, mark it `[x]`.
 4. If a decision changes the design, update the relevant document before continuing.
@@ -51,4 +51,4 @@ Each document phase must be complete and agreed upon before the next begins. Eac
 
 - Work one task at a time. Do not batch or skip ahead.
 - Scope is fixed per phase. New ideas go into a later phase or back into the PRD.
-- If blocked, mark `[!]` and document why in `PLAN.md` next to the task.
+- If blocked, mark `[!]` and document why in `plan.md` next to the task.

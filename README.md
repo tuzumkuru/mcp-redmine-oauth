@@ -1,4 +1,4 @@
-# mcp-redmine-oauth
+# mcp-redmine-oauth — Redmine FastMCP Server with OAuth
 
 A centrally-deployed MCP server for [Redmine](https://www.redmine.org/) with OAuth 2.0 authentication. An administrator deploys it once; users connect by authorizing through Redmine — no API keys or per-user setup required. Built with [FastMCP 3](https://github.com/jlowin/fastmcp).
 

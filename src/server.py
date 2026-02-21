@@ -39,7 +39,7 @@ auth = RedmineProvider(
 
 # FastMCP server
 mcp = FastMCP(
-    name="Redmine MCP",
+    name="Redmine FastMCP Server with OAuth",
     version=version("mcp-redmine-oauth"),
     instructions="MCP server for interacting with Redmine project management.",
     auth=auth,

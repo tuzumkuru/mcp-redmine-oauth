@@ -1,4 +1,4 @@
-# Architecture — Redmine FastMCP Server
+# Architecture — Redmine FastMCP Server with OAuth
 
 ## Components
 

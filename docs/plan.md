@@ -1,4 +1,4 @@
-# Development Plan — Redmine FastMCP Server
+# Development Plan — Redmine FastMCP Server with OAuth
 
 ## Task Status Convention
 
