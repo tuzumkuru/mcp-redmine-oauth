@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from importlib.metadata import version
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
@@ -39,6 +40,7 @@ auth = RedmineProvider(
 # FastMCP server
 mcp = FastMCP(
     name="Redmine MCP",
+    version=version("mcp-redmine-oauth"),
     instructions="MCP server for interacting with Redmine project management.",
     auth=auth,
 )

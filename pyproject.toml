@@ -1,7 +1,7 @@
 [project]
-name = "redmince-fastmcp"
+name = "mcp-redmine-oauth"
 version = "0.1.0"
-description = "MCP server bridging AI agents to Redmine via OAuth 2.0"
+description = "Centrally-deployed MCP server for Redmine with OAuth 2.0 — deploy once, users authorize via Redmine"
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=3.0.0,<4.0.0",

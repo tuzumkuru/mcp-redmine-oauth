@@ -1,6 +1,6 @@
-# Redmine FastMCP Server
+# mcp-redmine-oauth
 
-MCP server that bridges AI agents to a [Redmine](https://www.redmine.org/) instance via OAuth 2.0. Built with [FastMCP 3](https://github.com/jlowin/fastmcp).
+A centrally-deployed MCP server for [Redmine](https://www.redmine.org/) with OAuth 2.0 authentication. An administrator deploys it once; users connect by authorizing through Redmine — no API keys or per-user setup required. Built with [FastMCP 3](https://github.com/jlowin/fastmcp).
 
 ## How it works
 
@@ -23,7 +23,7 @@ The MCP client only ever sees a FastMCP-issued JWT. The Redmine OAuth token is s
 ## Prerequisites
 
 - Python 3.11+
-- A running Redmine 6.1+ instance with **REST API enabled** and **OAuth enabled**
+- A running Redmine 6.1+ instance with **REST API enabled**
 - An OAuth application registered in Redmine (see below)
 
 ## Redmine Setup
@@ -38,7 +38,7 @@ The MCP client only ever sees a FastMCP-issued JWT. The Redmine OAuth token is s
 
 | Field | Value |
 |---|---|
-| Redirect URI | `http://localhost:8000/auth/callback` |
+| Redirect URI | `http://<MCP_BASE_URL>/auth/callback` |
 | Confidential client | Yes |
 | Scopes | Select the scopes your tools need (e.g. View Issues, View Projects) |
 
@@ -63,27 +63,20 @@ REDMINE_SCOPES=view_issues view_project
 
 ## Running
 
-### Locally
-
 ```bash
 pip install -e .
 python src/server.py
 ```
 
-### Docker Compose
+The MCP server will be available at `http://localhost:8000/mcp`.
 
-Starts the MCP server and [MCP Inspector](https://github.com/modelcontextprotocol/inspector) together:
+To test with [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ```bash
-docker compose up
+npx @modelcontextprotocol/inspector
 ```
 
-| Service | URL |
-|---|---|
-| MCP Server | `http://localhost:8000/mcp` |
-| MCP Inspector UI | `http://localhost:6274` |
-
-In the Inspector UI, set the transport to **Streamable HTTP** and enter `http://mcp-server:8000/mcp` (the Docker service name, not `localhost`).
+Open `http://localhost:6274`, set transport to **Streamable HTTP**, and enter `http://localhost:8000/mcp`.
 
 ## Environment Variables
 
