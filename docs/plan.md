@@ -80,18 +80,18 @@
 - Paginated search results are handled correctly
 
 ### Tools
-- [ ] `tools.py`: `search_issues(query, project_id?, status_id?)`
-- [ ] Truncate journal history in `get_issue_details` when entries exceed a configurable limit
-- [ ] Handle Redmine API pagination for `search_issues` results
+- [x] `tools.py`: `search_issues(query, project_id?, open_issues_only?)` — uses `/search.json` for full-text search
+- [x] Truncate journal history in `get_issue_details` when entries exceed `MAX_JOURNAL_ENTRIES` (25)
+- [x] Handle Redmine API pagination for `search_issues` results (offset/limit with metadata)
 
 ### Resources
-- [ ] `resources.py`: `redmine://projects/active` — active projects accessible to the user
-- [ ] `resources.py`: `redmine://trackers` — available trackers with IDs
-- [ ] `resources.py`: `redmine://users/me` — authenticated user profile
+- [x] `resources.py`: `redmine://projects/active` — active projects accessible to the user
+- [x] `resources.py`: `redmine://trackers` — available trackers with IDs
+- [x] `resources.py`: `redmine://users/me` — authenticated user profile
 
 ### Tests
-- [ ] Unit tests for `search_issues` with mocked `client.py`
-- [ ] Unit tests for all resources with mocked `client.py`
+- [x] Unit tests for `search_issues` with mocked `client.py`
+- [x] Unit tests for all resources with mocked `client.py`
 
 ---
 
@@ -170,3 +170,4 @@
 Ideas and requests not yet assigned to a phase. Review during phase planning.
 
 - Push repo to GitHub and migrate backlog items to Issues
+- Per-client Redmine consent: Redmine auto-approves after first grant because all MCP clients share the same `REDMINE_CLIENT_ID`. Consider whether per-client consent is desirable (would require separate Redmine app registrations or a `force_reauthorize` param per client).

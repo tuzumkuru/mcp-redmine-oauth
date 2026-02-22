@@ -13,6 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from mcp_redmine_oauth.auth import RedmineProvider
 from mcp_redmine_oauth.client import RedmineClient
+from mcp_redmine_oauth.resources import register_resources
 from mcp_redmine_oauth.tools import register_tools
 
 load_dotenv()
@@ -50,6 +51,7 @@ redmine = RedmineClient(base_url=REDMINE_URL)
 
 # Register MCP surface
 register_tools(mcp, redmine)
+register_resources(mcp, redmine)
 
 
 def main() -> None:
