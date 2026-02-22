@@ -14,6 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 from mcp_redmine_oauth.auth import RedmineProvider
 from mcp_redmine_oauth.client import RedmineClient
 from mcp_redmine_oauth.resources import register_resources
+from mcp_redmine_oauth.scopes import get_registered_scopes
 from mcp_redmine_oauth.tools import register_tools
 
 load_dotenv()
@@ -27,31 +28,30 @@ REDMINE_CLIENT_SECRET = os.environ["REDMINE_CLIENT_SECRET"]
 MCP_HOST = os.environ.get("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.environ.get("MCP_PORT", "8000"))
 MCP_BASE_URL = os.environ.get("MCP_BASE_URL", f"http://localhost:{MCP_PORT}")
-REDMINE_SCOPES = os.environ.get("REDMINE_SCOPES", "").split() or None
 
-# Auth provider
-auth = RedmineProvider(
-    redmine_url=REDMINE_URL,
-    client_id=REDMINE_CLIENT_ID,
-    client_secret=REDMINE_CLIENT_SECRET,
-    base_url=MCP_BASE_URL,
-    scopes=REDMINE_SCOPES,
-)
-
-# FastMCP server
+# FastMCP server (auth added after tool registration so scopes can be auto-collected)
 mcp = FastMCP(
     name="Redmine FastMCP Server with OAuth",
     version=version("mcp-redmine-oauth"),
     instructions="MCP server for interacting with Redmine project management.",
-    auth=auth,
 )
 
 # Redmine REST client
 redmine = RedmineClient(base_url=REDMINE_URL)
 
-# Register MCP surface
+# Register MCP surface — @requires_scopes decorators populate the scope registry as a side effect
 register_tools(mcp, redmine)
 register_resources(mcp, redmine)
+
+# Auth provider — scopes auto-collected from @requires_scopes decorators on all tools/resources
+auth = RedmineProvider(
+    redmine_url=REDMINE_URL,
+    client_id=REDMINE_CLIENT_ID,
+    client_secret=REDMINE_CLIENT_SECRET,
+    base_url=MCP_BASE_URL,
+    scopes=get_registered_scopes(),
+)
+mcp.auth = auth
 
 
 def main() -> None:

@@ -6,37 +6,35 @@ from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 
 from mcp_redmine_oauth.client import RedmineClient
+from mcp_redmine_oauth.scopes import VIEW_PROJECT, requires_scopes
 
 
 def register_resources(mcp: FastMCP, redmine: RedmineClient) -> None:
     """Register all Redmine resources on the FastMCP server."""
 
     @mcp.resource("redmine://projects/active")
+    @requires_scopes(VIEW_PROJECT)
     async def active_projects() -> str:
         """Active Redmine projects accessible to the authenticated user."""
         token = get_access_token()
-        if token is None:
-            return "Error: not authenticated."
         data = await redmine.get(
             "/projects.json", token=token.token, params={"status": 1}
         )
         return _format_projects(data)
 
     @mcp.resource("redmine://trackers")
+    @requires_scopes(VIEW_PROJECT)
     async def trackers() -> str:
         """Available issue trackers (Bug, Feature, etc.) with their IDs."""
         token = get_access_token()
-        if token is None:
-            return "Error: not authenticated."
         data = await redmine.get("/trackers.json", token=token.token)
         return _format_trackers(data)
 
     @mcp.resource("redmine://users/me")
+    @requires_scopes()
     async def current_user() -> str:
         """Profile of the currently authenticated Redmine user."""
         token = get_access_token()
-        if token is None:
-            return "Error: not authenticated."
         data = await redmine.get("/users/current.json", token=token.token)
         return _format_user(data)
 

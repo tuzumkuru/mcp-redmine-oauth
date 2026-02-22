@@ -89,9 +89,18 @@
 - [x] `resources.py`: `redmine://trackers` — available trackers with IDs
 - [x] `resources.py`: `redmine://users/me` — authenticated user profile
 
+### Scope Architecture
+- [x] `scopes.py`: `@requires_scopes(*scopes)` decorator — declares required scopes at decoration time (auto-populates registry) and enforces auth + scope at call time
+- [x] `scopes.py`: `get_registered_scopes()` replaces manual `ALL_SCOPES` list — server always requests exactly what the tools need
+- [x] All tools and resources declare scopes via `@requires_scopes` — no inline `check_scope()` calls in function bodies
+- [x] `server.py`: register tools/resources first, auto-collect scopes via `get_registered_scopes()`, create `RedmineProvider`, then set `mcp.auth`
+- [x] `auth.py`: `_extract_upstream_claims` captures granted scopes from Redmine token exchange; `verify_token` sets real `AccessToken.scopes`
+
 ### Tests
 - [x] Unit tests for `search_issues` with mocked `client.py`
 - [x] Unit tests for all resources with mocked `client.py`
+- [x] Unit tests for `requires_scopes` decorator (registry, auth guard, scope guard, passthrough)
+- [x] Unit tests for `_extract_upstream_claims` scope capture in `auth.py`
 
 ---
 
@@ -131,9 +140,14 @@
 - Multiple users can connect simultaneously with fully isolated sessions
 
 ### Persistent Token Storage
-- [ ] Implement SQLite backend for `OAuthProxy` token store
+- [ ] Implement SQLite backend for `OAuthProxy` token store (also persists `scope_store` in `auth.py`)
 - [ ] Make backend selectable via `TOKEN_STORE_URL` env var (default: SQLite, optional: Redis)
 - [ ] Test: token survives server restart
+
+### Dynamic Tool Disabling by Scope
+- [ ] Extend `requires_scopes` wrapper to accept injected `Context` (FastMCP dependency injection)
+- [ ] On first authenticated call per session: iterate scope registry, call `disable_components(context, ...)` for tools with unmet scopes
+- [ ] Client receives `ToolListChangedNotification` — tools disappear from list if scope not granted
 
 ### Observability
 - [ ] Add structured logging (request in/out, OAuth events, Redmine API errors)

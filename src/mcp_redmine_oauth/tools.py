@@ -6,6 +6,7 @@ from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 
 from mcp_redmine_oauth.client import RedmineClient, RedmineForbiddenError, RedmineNotFoundError
+from mcp_redmine_oauth.scopes import SEARCH_PROJECT, VIEW_ISSUES, requires_scopes
 
 MAX_JOURNAL_ENTRIES = 25
 
@@ -14,13 +15,12 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
     """Register all Redmine tools on the FastMCP server."""
 
     @mcp.tool()
+    @requires_scopes(VIEW_ISSUES)
     async def get_issue_details(issue_id: int) -> str:
         """Fetch full Redmine issue details including description, custom fields,
         and complete journal/comment history.
         """
         token = get_access_token()
-        if token is None:
-            return "Error: not authenticated. Please complete the OAuth flow first."
 
         try:
             data = await redmine.get(
@@ -37,6 +37,7 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
         return _format_issue(issue)
 
     @mcp.tool()
+    @requires_scopes(VIEW_ISSUES, SEARCH_PROJECT)
     async def search_issues(
         query: str,
         project_id: str | None = None,
@@ -54,8 +55,6 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
             limit: Maximum number of results to return (default 25).
         """
         token = get_access_token()
-        if token is None:
-            return "Error: not authenticated. Please complete the OAuth flow first."
 
         params: dict[str, str | int] = {
             "q": query,
