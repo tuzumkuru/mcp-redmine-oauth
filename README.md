@@ -47,6 +47,8 @@ Copy the generated **Client ID**, **Client Secret**.
 ## Setup
 
 ```bash
+git clone https://github.com/tuzumkuru/mcp-redmine-oauth.git
+cd mcp-redmine-oauth
 cp .env.example .env
 ```
 

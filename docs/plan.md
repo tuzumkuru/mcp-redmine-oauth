@@ -66,10 +66,10 @@
 ### Docker
 - [x] Write `Dockerfile` for the MCP server (multi-stage, non-root user)
 - [x] Write `docker-compose.yml` for the MCP server only (no inspector, no Redmine — those are external)
-- [ ] Test: image builds and server is reachable from an MCP client
+- [x] Test: image builds and server is reachable from an MCP client
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.2.0`
+- [~] `pyproject.toml`: bump to `0.2.0` — skipped, caught up in Phase 3 bump
 
 ---
 
@@ -110,15 +110,57 @@
 - [x] Unit tests for `_extract_upstream_claims` scope capture in `auth.py`
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.3.0`
+- [x] `pyproject.toml`: bump to `0.3.0`
 
 ---
 
-## Phase 4: Advanced Tools — Write Operations + Prompts → `v0.4.0`
+## Phase 4: Extended Read Operations → `v0.4.0`
+
+**Goal:** Comprehensive read-only access to Redmine data — filtered issue queries, project details, relations, versions, and reference data.
+
+**Dependencies:** Phase 3 complete.
+
+**Success Criteria:**
+- `list_issues` with filters returns correct results (assignee, status, tracker, project)
+- `assigned_to_id=me` shortcut works for "my issues" queries
+- Issue relations and project versions are accessible
+- All reference data resources return valid data
+- Unit tests for all new tools and resources
+
+### Tools
+- [ ] `tools.py`: `list_issues(project_id?, assigned_to_id?, status_id?, tracker_id?, sort?, offset?, limit?)` — filtered issue listing via `/issues.json`; support `assigned_to_id="me"` shortcut
+- [ ] `tools.py`: `get_issue_relations(issue_id)` — blocking/blocked-by/related links via `/issues/{id}/relations.json`
+- [ ] `tools.py`: `get_project_details(project_id)` — single project with categories, modules, custom fields via `/projects/{id}.json?include=trackers,issue_categories,enabled_modules`
+- [ ] `tools.py`: `get_project_versions(project_id)` — milestones/releases via `/projects/{id}/versions.json`
+- [ ] `tools.py`: `list_time_entries(project_id?, user_id?, from_date?, to_date?, offset?, limit?)` — time entries via `/time_entries.json`
+
+### Resources
+- [ ] `resources.py`: `redmine://issue-statuses` — all status values (New, In Progress, Closed…) via `/issue_statuses.json`
+- [ ] `resources.py`: `redmine://enumerations/priorities` — priority levels (Low, Normal, High…) via `/enumerations/issue_priorities.json`
+
+### Scopes
+- [ ] `scopes.py`: add `VIEW_TIME_ENTRIES = "view_time_entries"` constant
+
+### Tests
+- [ ] Unit tests for `list_issues` with mocked filters and pagination
+- [ ] Unit tests for `get_issue_relations`, `get_project_details`, `get_project_versions`
+- [ ] Unit tests for `list_time_entries` with mocked date range filters
+- [ ] Unit tests for new resources (`issue-statuses`, `enumerations/priorities`)
+
+### Documentation
+- [ ] Update `README.md` tools/resources table and required scopes
+- [ ] Update `docs/architecture.md` scope mapping table
+
+### Version
+- [ ] `pyproject.toml`: bump to `0.4.0`
+
+---
+
+## Phase 5: Write Operations + Prompts → `v0.5.0`
 
 **Goal:** Write tools and AI prompts are working end-to-end.
 
-**Dependencies:** Phase 3 complete.
+**Dependencies:** Phase 4 complete.
 
 **Success Criteria:**
 - `create_issue` and `update_issue` work in Claude Desktop
@@ -138,15 +180,15 @@
 - [ ] Unit tests for `create_issue` and `update_issue` with mocked `client.py`
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.4.0`
+- [ ] `pyproject.toml`: bump to `0.6.0`
 
 ---
 
-## Phase 5: Production Hardening → `v0.5.0`
+## Phase 6: Production Hardening → `v0.6.0`
 
 **Goal:** Server is stable, observable, and sessions survive restarts.
 
-**Dependencies:** Phase 4 complete.
+**Dependencies:** Phase 5 complete.
 
 **Success Criteria:**
 - Restarting the server does not log out connected users
@@ -171,15 +213,15 @@
 - [ ] Concurrent multi-user session test: two clients, isolated Redmine tokens
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.5.0`
+- [ ] `pyproject.toml`: bump to `0.6.0`
 
 ---
 
-## Phase 6: Release → `v1.0.0`
+## Phase 7: Release → `v1.0.0`
 
 **Goal:** Project is documented, versioned, and ready for public use.
 
-**Dependencies:** Phase 5 complete.
+**Dependencies:** Phase 6 complete.
 
 **Success Criteria:**
 - README covers all setup steps end-to-end
