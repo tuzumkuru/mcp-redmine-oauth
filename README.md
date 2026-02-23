@@ -105,8 +105,15 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 |---|---|---|---|
 | `get_issue_details` | Tool | `view_issues` | Fetch a Redmine issue by ID with description, custom fields, and journals |
 | `search_issues` | Tool | `view_issues`, `search_project` | Full-text search across issues with pagination |
+| `list_issues` | Tool | `view_issues` | List issues with filters (project, assignee, status, tracker, sort) |
+| `get_issue_relations` | Tool | `view_issues` | Get issue relations (blocking, blocked-by, related, etc.) |
+| `get_project_details` | Tool | `view_project` | Project details with trackers, categories, and enabled modules |
+| `get_project_versions` | Tool | `view_project` | Project versions/milestones with status and due dates |
+| `list_time_entries` | Tool | `view_time_entries` | List time entries with filters (project, user, date range) |
 | `redmine://projects/active` | Resource | `view_project` | List active projects |
 | `redmine://trackers` | Resource | `view_project` | List available trackers |
+| `redmine://issue-statuses` | Resource | `view_issues` | All issue statuses with IDs and closed flags |
+| `redmine://enumerations/priorities` | Resource | `view_issues` | Issue priority levels with IDs |
 | `redmine://users/me` | Resource | _(auth only)_ | Current authenticated user profile |
 
 Planned: `create_issue`, `update_issue`, prompts (`summarize_ticket`, `draft_bug_report`).
@@ -117,9 +124,10 @@ Enable these scopes on your Redmine OAuth application for full functionality:
 
 | Redmine Scope | Identifier | Used By |
 |---|---|---|
-| View Issues | `view_issues` | `get_issue_details`, `search_issues` |
-| View Projects | `view_project` | `redmine://projects/active`, `redmine://trackers` |
+| View Issues | `view_issues` | `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `redmine://issue-statuses`, `redmine://enumerations/priorities` |
+| View Projects | `view_project` | `get_project_details`, `get_project_versions`, `redmine://projects/active`, `redmine://trackers` |
 | Search Project | `search_project` | `search_issues` |
+| View Time Entries | `view_time_entries` | `list_time_entries` |
 
 If a scope is not enabled, the tools that require it will return a descriptive error at call time.
 

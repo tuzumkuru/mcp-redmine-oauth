@@ -128,31 +128,31 @@
 - Unit tests for all new tools and resources
 
 ### Tools
-- [ ] `tools.py`: `list_issues(project_id?, assigned_to_id?, status_id?, tracker_id?, sort?, offset?, limit?)` — filtered issue listing via `/issues.json`; support `assigned_to_id="me"` shortcut
-- [ ] `tools.py`: `get_issue_relations(issue_id)` — blocking/blocked-by/related links via `/issues/{id}/relations.json`
-- [ ] `tools.py`: `get_project_details(project_id)` — single project with categories, modules, custom fields via `/projects/{id}.json?include=trackers,issue_categories,enabled_modules`
-- [ ] `tools.py`: `get_project_versions(project_id)` — milestones/releases via `/projects/{id}/versions.json`
-- [ ] `tools.py`: `list_time_entries(project_id?, user_id?, from_date?, to_date?, offset?, limit?)` — time entries via `/time_entries.json`
+- [x] `tools.py`: `list_issues(project_id?, assigned_to_id?, status_id?, tracker_id?, sort?, offset?, limit?)` — filtered issue listing via `/issues.json`; support `assigned_to_id="me"` shortcut
+- [x] `tools.py`: `get_issue_relations(issue_id)` — blocking/blocked-by/related links via `/issues/{id}/relations.json`
+- [x] `tools.py`: `get_project_details(project_id)` — single project with categories, modules, custom fields via `/projects/{id}.json?include=trackers,issue_categories,enabled_modules`
+- [x] `tools.py`: `get_project_versions(project_id)` — milestones/releases via `/projects/{id}/versions.json`
+- [x] `tools.py`: `list_time_entries(project_id?, user_id?, from_date?, to_date?, offset?, limit?)` — time entries via `/time_entries.json`
 
 ### Resources
-- [ ] `resources.py`: `redmine://issue-statuses` — all status values (New, In Progress, Closed…) via `/issue_statuses.json`
-- [ ] `resources.py`: `redmine://enumerations/priorities` — priority levels (Low, Normal, High…) via `/enumerations/issue_priorities.json`
+- [x] `resources.py`: `redmine://issue-statuses` — all status values (New, In Progress, Closed…) via `/issue_statuses.json`
+- [x] `resources.py`: `redmine://enumerations/priorities` — priority levels (Low, Normal, High…) via `/enumerations/issue_priorities.json`
 
 ### Scopes
-- [ ] `scopes.py`: add `VIEW_TIME_ENTRIES = "view_time_entries"` constant
+- [x] `scopes.py`: add `VIEW_TIME_ENTRIES = "view_time_entries"` constant
 
 ### Tests
-- [ ] Unit tests for `list_issues` with mocked filters and pagination
-- [ ] Unit tests for `get_issue_relations`, `get_project_details`, `get_project_versions`
-- [ ] Unit tests for `list_time_entries` with mocked date range filters
-- [ ] Unit tests for new resources (`issue-statuses`, `enumerations/priorities`)
+- [x] Unit tests for `list_issues` with mocked filters and pagination
+- [x] Unit tests for `get_issue_relations`, `get_project_details`, `get_project_versions`
+- [x] Unit tests for `list_time_entries` with mocked date range filters
+- [x] Unit tests for new resources (`issue-statuses`, `enumerations/priorities`)
 
 ### Documentation
-- [ ] Update `README.md` tools/resources table and required scopes
-- [ ] Update `docs/architecture.md` scope mapping table
+- [x] Update `README.md` tools/resources table and required scopes
+- [x] Update `docs/architecture.md` scope mapping table
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.4.0`
+- [x] `pyproject.toml`: bump to `0.4.0`
 
 ---
 

@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from mcp_redmine_oauth.resources import _format_projects, _format_trackers, _format_user
+from mcp_redmine_oauth.resources import (
+    _format_priorities,
+    _format_projects,
+    _format_statuses,
+    _format_trackers,
+    _format_user,
+)
 
 
 # --- _format_projects ---
@@ -82,3 +88,60 @@ def test_current_user_basic():
     assert "**ID:** 5" in result
     assert "**Email:** jdoe@example.com" in result
     assert "**Admin:** False" in result
+
+
+# --- _format_statuses ---
+
+
+def test_statuses_empty():
+    assert _format_statuses({"issue_statuses": []}) == "No issue statuses found."
+
+
+def test_statuses_basic():
+    data = {
+        "issue_statuses": [
+            {"id": 1, "name": "New", "is_closed": False},
+            {"id": 2, "name": "In Progress", "is_closed": False},
+            {"id": 5, "name": "Closed", "is_closed": True},
+        ]
+    }
+    result = _format_statuses(data)
+    assert "Issue Statuses (3)" in result
+    assert "**New** (id=1)" in result
+    assert "(closed)" not in result.split("New")[1].split("\n")[0]
+    assert "**Closed** (id=5) (closed)" in result
+
+
+def test_statuses_no_closed_flag():
+    data = {"issue_statuses": [{"id": 1, "name": "Open"}]}
+    result = _format_statuses(data)
+    assert "(closed)" not in result
+
+
+# --- _format_priorities ---
+
+
+def test_priorities_empty():
+    assert _format_priorities({"issue_priorities": []}) == "No priority levels found."
+
+
+def test_priorities_basic():
+    data = {
+        "issue_priorities": [
+            {"id": 1, "name": "Low", "is_default": False},
+            {"id": 2, "name": "Normal", "is_default": True},
+            {"id": 3, "name": "High", "is_default": False},
+        ]
+    }
+    result = _format_priorities(data)
+    assert "Issue Priorities (3)" in result
+    assert "**Low** (id=1)" in result
+    assert "**Normal** (id=2) ← default" in result
+    assert "**High** (id=3)" in result
+    assert "default" not in result.split("High")[1]
+
+
+def test_priorities_no_default():
+    data = {"issue_priorities": [{"id": 1, "name": "Normal"}]}
+    result = _format_priorities(data)
+    assert "default" not in result

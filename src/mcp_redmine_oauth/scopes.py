@@ -23,8 +23,9 @@ from fastmcp.server.dependencies import get_access_token
 VIEW_PROJECT = "view_project"
 VIEW_ISSUES = "view_issues"
 SEARCH_PROJECT = "search_project"  # Required for /search.json and project-scoped search
-ADD_ISSUES = "add_issues"          # Phase 4: create_issue
-EDIT_ISSUES = "edit_issues"        # Phase 4: update_issue
+VIEW_TIME_ENTRIES = "view_time_entries"  # Phase 4: list_time_entries
+ADD_ISSUES = "add_issues"               # Phase 5: create_issue
+EDIT_ISSUES = "edit_issues"             # Phase 5: update_issue
 
 
 # --- Global scope registry (populated at decoration time) ---
