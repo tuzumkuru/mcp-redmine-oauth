@@ -52,3 +52,19 @@ Each document phase must be complete and agreed upon before the next begins. Eac
 - Work one task at a time. Do not batch or skip ahead.
 - Scope is fixed per phase. New ideas go into a later phase or back into the PRD.
 - If blocked, mark `[!]` and document why in `plan.md` next to the task.
+
+---
+
+## Versioning
+
+This project uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`):
+
+| Bump | When |
+|---|---|
+| `MAJOR` | Breaking changes (auth flow change, removed tools, config format change) |
+| `MINOR` | New features (new tools, resources, prompts, new config options) |
+| `PATCH` | Bug fixes, doc updates, refactoring with no behavior change |
+
+**Source of truth:** `pyproject.toml` → `version = "X.Y.Z"`
+
+**Rule:** Bump the version as the **last task** of each phase, before the phase-complete commit. Each phase in `plan.md` has a target version and a version bump task.
