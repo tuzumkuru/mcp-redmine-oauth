@@ -52,6 +52,7 @@ Each document phase must be complete and agreed upon before the next begins. Eac
 - Work one task at a time. Do not batch or skip ahead.
 - Scope is fixed per phase. New ideas go into a later phase or back into the PRD.
 - If blocked, mark `[!]` and document why in `plan.md` next to the task.
+- **Never commit or push unless the user explicitly asks.** After completing a meaningful unit of work (feature, fix, refactor), remind the user that the changes are ready to commit — but do not run `git commit` yourself.
 
 ---
 
