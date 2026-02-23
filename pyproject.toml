@@ -1,6 +1,6 @@
 [project]
 name = "mcp-redmine-oauth"
-version = "0.1.0"
+version = "0.3.0"
 description = "Centrally-deployed MCP server for Redmine with OAuth 2.0 — deploy once, users authorize via Redmine"
 requires-python = ">=3.11"
 dependencies = [

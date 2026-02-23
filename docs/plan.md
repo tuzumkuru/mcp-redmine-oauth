@@ -12,7 +12,7 @@
 
 ---
 
-## Phase 1: MVP — Core Auth + One Tool
+## Phase 1: MVP — Core Auth + One Tool → `v0.1.0`
 
 **Goal:** A working FastMCP server where a real MCP client can authenticate via Redmine OAuth and call one tool successfully.
 
@@ -48,9 +48,12 @@
 ### Auth UX
 - [x] Disable FastMCP authorization consent screen — Redmine login/consent is the real gate; the extra FastMCP screen is redundant friction for a centrally-deployed server
 
+### Version
+- [x] `pyproject.toml`: version `0.1.0` (initial)
+
 ---
 
-## Phase 2: Containerization
+## Phase 2: Containerization → `v0.2.0`
 
 **Goal:** The MCP server runs in a Docker container with only env var configuration.
 
@@ -65,9 +68,12 @@
 - [x] Write `docker-compose.yml` for the MCP server only (no inspector, no Redmine — those are external)
 - [ ] Test: image builds and server is reachable from an MCP client
 
+### Version
+- [ ] `pyproject.toml`: bump to `0.2.0`
+
 ---
 
-## Phase 3: Basic Tools — Read Operations
+## Phase 3: Basic Tools — Read Operations → `v0.3.0`
 
 **Goal:** All read-only tools and resources are working.
 
@@ -103,9 +109,12 @@
 - [x] Unit tests for `requires_scopes` decorator (registry, auth guard, scope guard, passthrough)
 - [x] Unit tests for `_extract_upstream_claims` scope capture in `auth.py`
 
+### Version
+- [ ] `pyproject.toml`: bump to `0.3.0`
+
 ---
 
-## Phase 4: Advanced Tools — Write Operations + Prompts
+## Phase 4: Advanced Tools — Write Operations + Prompts → `v0.4.0`
 
 **Goal:** Write tools and AI prompts are working end-to-end.
 
@@ -128,9 +137,12 @@
 ### Tests
 - [ ] Unit tests for `create_issue` and `update_issue` with mocked `client.py`
 
+### Version
+- [ ] `pyproject.toml`: bump to `0.4.0`
+
 ---
 
-## Phase 5: Production Hardening
+## Phase 5: Production Hardening → `v0.5.0`
 
 **Goal:** Server is stable, observable, and sessions survive restarts.
 
@@ -158,9 +170,12 @@
 - [ ] End-to-end OAuth flow test against a real (or test) Redmine instance
 - [ ] Concurrent multi-user session test: two clients, isolated Redmine tokens
 
+### Version
+- [ ] `pyproject.toml`: bump to `0.5.0`
+
 ---
 
-## Phase 6: Release v1.0
+## Phase 6: Release → `v1.0.0`
 
 **Goal:** Project is documented, versioned, and ready for public use.
 
