@@ -31,13 +31,39 @@ EDIT_ISSUES = "edit_issues"        # Phase 4: update_issue
 
 _registry: set[str] = set()
 
+# Optional allowlist: when set, only these scopes are requested from Redmine.
+# Scopes declared by tools but not in this set won't be requested during OAuth;
+# those tools will return a scope-missing error at call time.
+_allowed_scopes: set[str] | None = None
+
+
+def set_allowed_scopes(scopes: list[str]) -> None:
+    """Set the allowlist of scopes the Redmine OAuth app supports.
+
+    When set, get_effective_scopes() returns only the intersection of declared
+    tool scopes and this allowlist.  When not set, all declared scopes are used.
+    """
+    global _allowed_scopes
+    _allowed_scopes = set(scopes)
+
 
 def get_registered_scopes() -> list[str]:
     """Return all scopes declared via @requires_scopes across all registered tools.
 
-    Call this after register_tools() and register_resources() to get the complete set
-    of scopes to request during OAuth.
+    Call this after register_tools() and register_resources() to get the complete set.
+    Used by verify_token fallback — always returns the full set regardless of allowlist.
     """
+    return sorted(_registry)
+
+
+def get_effective_scopes() -> list[str]:
+    """Return the scopes to actually request during OAuth authorization.
+
+    If an allowlist is set (via set_allowed_scopes), returns the intersection of
+    declared tool scopes and the allowlist.  Otherwise returns all declared scopes.
+    """
+    if _allowed_scopes is not None:
+        return sorted(_registry & _allowed_scopes)
     return sorted(_registry)
 
 

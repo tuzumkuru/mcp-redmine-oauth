@@ -13,11 +13,15 @@ from mcp_redmine_oauth.scopes import (
     SEARCH_PROJECT,
     VIEW_ISSUES,
     VIEW_PROJECT,
+    _allowed_scopes,
     _registry,
     check_scope,
+    get_effective_scopes,
     get_registered_scopes,
     requires_scopes,
+    set_allowed_scopes,
 )
+import mcp_redmine_oauth.scopes as scopes_mod
 
 
 def _token(scopes: list[str] | None) -> AccessToken:
@@ -187,3 +191,58 @@ async def test_requires_scopes_no_args_allows_authenticated():
         result = await _dummy()
 
     assert result == "success"
+
+
+# --- get_effective_scopes / set_allowed_scopes ---
+
+
+def test_get_effective_scopes_no_allowlist_returns_all():
+    """Without an allowlist, get_effective_scopes() returns all registered scopes."""
+    scopes_mod._allowed_scopes = None
+    # Add test scopes to registry
+    _registry.update({"eff_a", "eff_b"})
+    try:
+        effective = get_effective_scopes()
+        assert "eff_a" in effective
+        assert "eff_b" in effective
+    finally:
+        _registry.discard("eff_a")
+        _registry.discard("eff_b")
+        scopes_mod._allowed_scopes = None
+
+
+def test_get_effective_scopes_with_allowlist_returns_intersection():
+    """With an allowlist, get_effective_scopes() returns only the intersection."""
+    _registry.update({"eff_x", "eff_y", "eff_z"})
+    set_allowed_scopes(["eff_x", "eff_z", "eff_extra"])
+    try:
+        effective = get_effective_scopes()
+        assert "eff_x" in effective
+        assert "eff_z" in effective
+        assert "eff_y" not in effective      # declared but not allowed
+        assert "eff_extra" not in effective   # allowed but not declared
+    finally:
+        _registry.discard("eff_x")
+        _registry.discard("eff_y")
+        _registry.discard("eff_z")
+        scopes_mod._allowed_scopes = None
+
+
+def test_set_allowed_scopes_stores_as_set():
+    """set_allowed_scopes converts the list to a set."""
+    set_allowed_scopes(["a", "b", "a"])
+    try:
+        assert scopes_mod._allowed_scopes == {"a", "b"}
+    finally:
+        scopes_mod._allowed_scopes = None
+
+
+def test_get_effective_scopes_sorted():
+    """get_effective_scopes() returns sorted results."""
+    _registry.update({"zzz_test", "aaa_test"})
+    try:
+        effective = get_effective_scopes()
+        assert effective == sorted(effective)
+    finally:
+        _registry.discard("zzz_test")
+        _registry.discard("aaa_test")

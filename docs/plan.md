@@ -92,8 +92,9 @@
 ### Scope Architecture
 - [x] `scopes.py`: `@requires_scopes(*scopes)` decorator — declares required scopes at decoration time (auto-populates registry) and enforces auth + scope at call time
 - [x] `scopes.py`: `get_registered_scopes()` replaces manual `ALL_SCOPES` list — server always requests exactly what the tools need
+- [x] `scopes.py`: `set_allowed_scopes()` / `get_effective_scopes()` — optional `REDMINE_SCOPES` env var filters requested scopes to what the Redmine OAuth app supports (intersection of declared and allowed)
 - [x] All tools and resources declare scopes via `@requires_scopes` — no inline `check_scope()` calls in function bodies
-- [x] `server.py`: register tools/resources first, auto-collect scopes via `get_registered_scopes()`, create `RedmineProvider`, then set `mcp.auth`
+- [x] `server.py`: register tools/resources first, auto-collect scopes via `get_effective_scopes()`, create `RedmineProvider`, then set `mcp.auth`; reads optional `REDMINE_SCOPES` env var as allowlist filter
 - [x] `auth.py`: `_extract_upstream_claims` captures granted scopes from Redmine token exchange; `verify_token` sets real `AccessToken.scopes`
 
 ### Tests
