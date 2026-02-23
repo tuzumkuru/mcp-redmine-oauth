@@ -3,9 +3,15 @@
 Bridges FastMCP's OAuthProxy to Redmine 6.1's native OAuth 2.0 provider.
 Redmine issues opaque tokens (not JWTs), so we verify them by calling
 Redmine's /users/current.json endpoint.
+
+Granted scopes are captured from the token-exchange response via
+_extract_upstream_claims and stored in a shared scope_store, so that
+verify_token can populate AccessToken.scopes with real values.
 """
 
 from __future__ import annotations
+
+from typing import Any
 
 import httpx
 from key_value.aio.protocols import AsyncKeyValue
@@ -14,6 +20,8 @@ from pydantic import AnyHttpUrl
 from fastmcp.server.auth import AccessToken, TokenVerifier
 from fastmcp.server.auth.oauth_proxy import OAuthProxy
 from fastmcp.utilities.logging import get_logger
+
+from mcp_redmine_oauth.scopes import get_registered_scopes
 
 logger = get_logger(__name__)
 
@@ -26,10 +34,12 @@ class RedmineTokenVerifier(TokenVerifier):
         *,
         redmine_url: str,
         timeout_seconds: int = 10,
+        scope_store: dict[str, list[str]],
     ):
         super().__init__()
         self.redmine_url = redmine_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
+        self._scope_store = scope_store
 
     async def verify_token(self, token: str) -> AccessToken | None:
         try:
@@ -49,10 +59,14 @@ class RedmineTokenVerifier(TokenVerifier):
                 data = response.json()
                 user = data.get("user", {})
 
+                # Use scopes captured during token exchange; fall back to all registered scopes
+                # (covers token-refresh case where _extract_upstream_claims wasn't called)
+                granted_scopes = self._scope_store.get(token, get_registered_scopes())
+
                 return AccessToken(
                     token=token,
                     client_id=str(user.get("id", "unknown")),
-                    scopes=["api"],
+                    scopes=granted_scopes,
                     expires_at=None,
                     claims={
                         "sub": str(user.get("id")),
@@ -97,7 +111,11 @@ class RedmineProvider(OAuthProxy):
     ):
         redmine_url = redmine_url.rstrip("/")
 
-        token_verifier = RedmineTokenVerifier(redmine_url=redmine_url)
+        self._scope_store: dict[str, list[str]] = {}
+        token_verifier = RedmineTokenVerifier(
+            redmine_url=redmine_url,
+            scope_store=self._scope_store,
+        )
 
         extra_authorize_params = {"scope": " ".join(scopes)} if scopes else {}
 
@@ -120,3 +138,16 @@ class RedmineProvider(OAuthProxy):
         logger.debug(
             "Initialized Redmine OAuth provider for %s", redmine_url
         )
+
+    async def _extract_upstream_claims(
+        self, idp_tokens: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Capture granted scopes from Redmine's token-exchange response."""
+        access_token = idp_tokens.get("access_token", "")
+        scope_str = idp_tokens.get("scope", "")
+        if access_token and scope_str:
+            self._scope_store[access_token] = scope_str.split()
+            logger.debug(
+                "Captured scopes for token …%s: %s", access_token[-6:], scope_str
+            )
+        return None  # Don't embed extra claims in the FastMCP JWT
