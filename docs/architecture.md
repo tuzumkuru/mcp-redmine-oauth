@@ -69,9 +69,9 @@ All modules live under the `mcp_redmine_oauth` package (`src/mcp_redmine_oauth/`
 | `auth.py` | `RedmineProvider` (OAuthProxy subclass) + `RedmineTokenVerifier`; scope capture from token exchange |
 | `scopes.py` | `@requires_scopes` decorator, scope registry, allowlist filter, `check_scope` helper |
 | `client.py` | Thin async HTTP client wrapping Redmine REST API; receives Bearer token per call |
-| `tools.py` | MCP tools: `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `get_project_details`, `get_project_versions`, `list_time_entries` (planned: `create_issue`, `update_issue`) |
+| `tools.py` | MCP tools: `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `get_project_details`, `get_project_versions`, `list_time_entries`, `create_issue`, `update_issue`, `create_project`, `update_project`, `get_wiki_page`, `update_wiki_page`, `rename_wiki_page` |
 | `resources.py` | MCP resources: `projects/active`, `trackers`, `users/me`, `issue-statuses`, `enumerations/priorities` |
-| `prompts.py` | (planned) MCP prompts: `summarize_ticket`, `draft_bug_report` |
+| `prompts.py` | MCP prompts: `summarize_ticket`, `draft_bug_report` |
 
 The package exposes a console entry point `mcp-redmine-oauth` (defined in `pyproject.toml`) that calls `server:main`.
 
@@ -120,6 +120,15 @@ async def search_issues(query: str) -> str: ...
 | `get_project_details` | `view_project` |
 | `get_project_versions` | `view_project` |
 | `list_time_entries` | `view_time_entries` |
+| `create_issue` | `add_issues` |
+| `update_issue` | `edit_issues` |
+| `create_project` | `add_project` |
+| `update_project` | `edit_project` |
+| `get_wiki_page` | `view_wiki_pages` |
+| `update_wiki_page` | `edit_wiki_pages` |
+| `rename_wiki_page` | `rename_wiki_pages` |
+| `summarize_ticket` | `view_issues` |
+| `draft_bug_report` | `view_project` |
 | `active_projects` | `view_project` |
 | `trackers` | `view_project` |
 | `issue-statuses` | `view_issues` |

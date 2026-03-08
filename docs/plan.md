@@ -164,23 +164,44 @@
 
 **Success Criteria:**
 - `create_issue` and `update_issue` work in Claude Desktop
+- `create_project` and `update_project` work with correct scope enforcement
+- Wiki read/write operations work end-to-end
 - Both prompts execute correctly
-- Redmine 403 errors surface as clear scope-related messages
 
-### Tools
-- [ ] `tools.py`: `create_issue(project_id, tracker_id, subject, description, priority_id?)`
-- [ ] `tools.py`: `update_issue(issue_id, notes?, status_id?, assignee_id?)`
-- [ ] Map Redmine 403 → user-facing MCP error explaining missing scope
+### Tools — Issues
+- [x] `tools.py`: `create_issue(project_id, subject, tracker_id?, description?, priority_id?, assigned_to_id?, status_id?, category_id?, fixed_version_id?, parent_issue_id?)`
+- [x] `tools.py`: `update_issue(issue_id, notes?, status_id?, assigned_to_id?, priority_id?, subject?, description?, tracker_id?, category_id?, fixed_version_id?)`
+
+### Tools — Projects
+- [x] `tools.py`: `create_project(name, identifier, description?, is_public?, parent_id?, tracker_ids?)` — `POST /projects.json`; requires `add_project` scope
+- [x] `tools.py`: `update_project(project_id, name?, description?, is_public?, parent_id?, tracker_ids?)` — `PUT /projects/{id}.json`; requires `edit_project` scope
+
+### Tools — Wiki
+- [x] `tools.py`: `get_wiki_page(project_id, page_title?)` — `GET /projects/{id}/wiki/{title}.json`; defaults to main wiki page; requires `view_wiki_pages` scope
+- [x] `tools.py`: `update_wiki_page(project_id, page_title, content, comments?)` — `PUT /projects/{id}/wiki/{title}.json`; requires `edit_wiki_pages` scope
+- [x] `tools.py`: `rename_wiki_page(project_id, page_title, new_title, create_redirect?)` — `PUT /projects/{id}/wiki/{title}.json` with `wiki_page[title]`; requires `rename_wiki_pages` scope
+
+### Scopes
+- [x] `scopes.py`: add `ADD_ISSUES`, `EDIT_ISSUES`, `ADD_PROJECT`, `EDIT_PROJECT` constants
+- [x] `scopes.py`: add `VIEW_WIKI_PAGES`, `EDIT_WIKI_PAGES`, `RENAME_WIKI_PAGES` constants
 
 ### Prompts
-- [ ] `prompts.py`: `summarize_ticket(issue_id)`
-- [ ] `prompts.py`: `draft_bug_report(project_id, rough_notes)`
+- [x] `prompts.py`: `summarize_ticket(issue_id)`
+- [x] `prompts.py`: `draft_bug_report(project_id, rough_notes)`
 
 ### Tests
-- [ ] Unit tests for `create_issue` and `update_issue` with mocked `client.py`
+- [x] Unit tests for `create_issue` and `update_issue` formatters
+- [x] Unit tests for `create_project` and `update_project` formatters
+- [x] Unit tests for wiki tools (`get_wiki_page` formatter)
+- [x] Unit tests for prompts (`summarize_ticket`, `draft_bug_report`)
+- [x] Unit tests for `RedmineValidationError` (422) in client
+
+### Documentation
+- [x] Update `README.md` tools/resources table and required scopes
+- [x] Update `docs/architecture.md` module table and scope mapping
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.6.0`
+- [x] `pyproject.toml`: bump to `0.5.0`
 
 ---
 
@@ -243,3 +264,4 @@ Ideas and requests not yet assigned to a phase. Review during phase planning.
 
 - Push repo to GitHub and migrate backlog items to Issues
 - Per-client Redmine consent: Redmine auto-approves after first grant because all MCP clients share the same `REDMINE_CLIENT_ID`. Consider whether per-client consent is desirable (would require separate Redmine app registrations or a `force_reauthorize` param per client).
+- Configurable tools/resources via env var: allow admins to enable/disable specific tools and resources through an env file (e.g. `REDMINE_TOOLS=get_issue_details,list_issues` or `REDMINE_RESOURCES=projects/active,trackers`) so deployments can expose only a chosen subset.

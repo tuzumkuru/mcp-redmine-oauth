@@ -13,6 +13,7 @@ from mcp_redmine_oauth.client import (
     RedmineClient,
     RedmineForbiddenError,
     RedmineNotFoundError,
+    RedmineValidationError,
 )
 
 
@@ -46,6 +47,25 @@ def test_raise_for_status_404():
     with pytest.raises(RedmineNotFoundError) as exc_info:
         RedmineClient._raise_for_status(resp)
     assert exc_info.value.status_code == 404
+
+
+def test_raise_for_status_422_with_errors():
+    resp = _mock_response(422, {"errors": ["Subject can't be blank", "Tracker is invalid"]})
+    with pytest.raises(RedmineValidationError) as exc_info:
+        RedmineClient._raise_for_status(resp)
+    assert exc_info.value.status_code == 422
+    assert "Subject can't be blank" in exc_info.value.errors
+    assert "Tracker is invalid" in exc_info.value.errors
+    assert "Subject can't be blank" in str(exc_info.value)
+
+
+def test_raise_for_status_422_no_body():
+    resp = _mock_response(422)
+    resp.json.side_effect = Exception("no body")
+    with pytest.raises(RedmineValidationError) as exc_info:
+        RedmineClient._raise_for_status(resp)
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.errors == []
 
 
 def test_raise_for_status_500():

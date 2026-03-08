@@ -5,12 +5,24 @@ from __future__ import annotations
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 
-from mcp_redmine_oauth.client import RedmineClient, RedmineForbiddenError, RedmineNotFoundError
+from mcp_redmine_oauth.client import (
+    RedmineClient,
+    RedmineForbiddenError,
+    RedmineNotFoundError,
+    RedmineValidationError,
+)
 from mcp_redmine_oauth.scopes import (
+    ADD_ISSUES,
+    ADD_PROJECT,
+    EDIT_ISSUES,
+    EDIT_PROJECT,
+    EDIT_WIKI_PAGES,
+    RENAME_WIKI_PAGES,
     SEARCH_PROJECT,
     VIEW_ISSUES,
     VIEW_PROJECT,
     VIEW_TIME_ENTRIES,
+    VIEW_WIKI_PAGES,
     requires_scopes,
 )
 
@@ -233,6 +245,392 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
             return "Error: you do not have permission to view time entries."
 
         return _format_time_entries(data)
+
+    # --- Write tools: Issues ---
+
+    @mcp.tool()
+    @requires_scopes(ADD_ISSUES)
+    async def create_issue(
+        project_id: str,
+        subject: str,
+        tracker_id: int | None = None,
+        description: str | None = None,
+        priority_id: int | None = None,
+        assigned_to_id: int | None = None,
+        status_id: int | None = None,
+        category_id: int | None = None,
+        fixed_version_id: int | None = None,
+        parent_issue_id: int | None = None,
+    ) -> str:
+        """Create a new Redmine issue.
+
+        Args:
+            project_id: Project identifier (required).
+            subject: Issue subject/title (required).
+            tracker_id: Tracker ID (Bug, Feature, etc.). Use redmine://trackers to see IDs.
+            description: Issue description text.
+            priority_id: Priority ID. Use redmine://enumerations/priorities to see IDs.
+            assigned_to_id: User ID to assign the issue to.
+            status_id: Status ID. Use redmine://issue-statuses to see IDs.
+            category_id: Issue category ID.
+            fixed_version_id: Target version/milestone ID.
+            parent_issue_id: Parent issue ID for sub-tasks.
+        """
+        token = get_access_token()
+
+        issue_data: dict = {
+            "project_id": project_id,
+            "subject": subject,
+        }
+        if tracker_id is not None:
+            issue_data["tracker_id"] = tracker_id
+        if description is not None:
+            issue_data["description"] = description
+        if priority_id is not None:
+            issue_data["priority_id"] = priority_id
+        if assigned_to_id is not None:
+            issue_data["assigned_to_id"] = assigned_to_id
+        if status_id is not None:
+            issue_data["status_id"] = status_id
+        if category_id is not None:
+            issue_data["category_id"] = category_id
+        if fixed_version_id is not None:
+            issue_data["fixed_version_id"] = fixed_version_id
+        if parent_issue_id is not None:
+            issue_data["parent_issue_id"] = parent_issue_id
+
+        try:
+            data = await redmine.post(
+                "/issues.json", token=token.token, json={"issue": issue_data}
+            )
+        except RedmineForbiddenError:
+            return "Error: you do not have permission to create issues in this project."
+        except RedmineValidationError as e:
+            return f"Error: validation failed — {'; '.join(e.errors) if e.errors else 'unknown error'}."
+        except RedmineNotFoundError:
+            return f"Error: project '{project_id}' not found in Redmine."
+
+        return _format_created_issue(data)
+
+    @mcp.tool()
+    @requires_scopes(EDIT_ISSUES)
+    async def update_issue(
+        issue_id: int,
+        notes: str | None = None,
+        status_id: int | None = None,
+        assigned_to_id: int | None = None,
+        priority_id: int | None = None,
+        subject: str | None = None,
+        description: str | None = None,
+        tracker_id: int | None = None,
+        category_id: int | None = None,
+        fixed_version_id: int | None = None,
+    ) -> str:
+        """Update an existing Redmine issue.
+
+        Args:
+            issue_id: Issue ID to update (required).
+            notes: Comment to add to the issue.
+            status_id: New status ID. Use redmine://issue-statuses to see IDs.
+            assigned_to_id: New assignee user ID.
+            priority_id: New priority ID.
+            subject: New subject/title.
+            description: New description.
+            tracker_id: New tracker ID.
+            category_id: New category ID.
+            fixed_version_id: New target version/milestone ID.
+        """
+        token = get_access_token()
+
+        issue_data: dict = {}
+        if notes is not None:
+            issue_data["notes"] = notes
+        if status_id is not None:
+            issue_data["status_id"] = status_id
+        if assigned_to_id is not None:
+            issue_data["assigned_to_id"] = assigned_to_id
+        if priority_id is not None:
+            issue_data["priority_id"] = priority_id
+        if subject is not None:
+            issue_data["subject"] = subject
+        if description is not None:
+            issue_data["description"] = description
+        if tracker_id is not None:
+            issue_data["tracker_id"] = tracker_id
+        if category_id is not None:
+            issue_data["category_id"] = category_id
+        if fixed_version_id is not None:
+            issue_data["fixed_version_id"] = fixed_version_id
+
+        if not issue_data:
+            return "Error: no fields to update. Provide at least one field to change."
+
+        try:
+            await redmine.put(
+                f"/issues/{issue_id}.json", token=token.token, json={"issue": issue_data}
+            )
+        except RedmineForbiddenError:
+            return f"Error: you do not have permission to update issue #{issue_id}."
+        except RedmineNotFoundError:
+            return f"Error: issue #{issue_id} not found in Redmine."
+        except RedmineValidationError as e:
+            return f"Error: validation failed — {'; '.join(e.errors) if e.errors else 'unknown error'}."
+
+        updated_fields = list(issue_data.keys())
+        return f"Issue #{issue_id} updated successfully. Changed: {', '.join(updated_fields)}."
+
+    # --- Write tools: Projects ---
+
+    @mcp.tool()
+    @requires_scopes(ADD_PROJECT)
+    async def create_project(
+        name: str,
+        identifier: str,
+        description: str | None = None,
+        is_public: bool | None = None,
+        parent_id: int | None = None,
+        tracker_ids: list[int] | None = None,
+    ) -> str:
+        """Create a new Redmine project.
+
+        Args:
+            name: Display name for the project (required).
+            identifier: URL-safe identifier, e.g. "my-project" (required, lowercase, no spaces).
+            description: Project description.
+            is_public: Whether the project is publicly visible.
+            parent_id: Parent project ID for sub-projects.
+            tracker_ids: List of tracker IDs to enable. Use redmine://trackers to see IDs.
+        """
+        token = get_access_token()
+
+        project_data: dict = {
+            "name": name,
+            "identifier": identifier,
+        }
+        if description is not None:
+            project_data["description"] = description
+        if is_public is not None:
+            project_data["is_public"] = is_public
+        if parent_id is not None:
+            project_data["parent_id"] = parent_id
+        if tracker_ids is not None:
+            project_data["tracker_ids"] = tracker_ids
+
+        try:
+            data = await redmine.post(
+                "/projects.json", token=token.token, json={"project": project_data}
+            )
+        except RedmineForbiddenError:
+            return "Error: you do not have permission to create projects."
+        except RedmineValidationError as e:
+            return f"Error: validation failed — {'; '.join(e.errors) if e.errors else 'unknown error'}."
+
+        return _format_created_project(data)
+
+    @mcp.tool()
+    @requires_scopes(EDIT_PROJECT)
+    async def update_project(
+        project_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        is_public: bool | None = None,
+        parent_id: int | None = None,
+        tracker_ids: list[int] | None = None,
+    ) -> str:
+        """Update an existing Redmine project.
+
+        Args:
+            project_id: Project identifier or numeric ID (required).
+            name: New display name.
+            description: New description.
+            is_public: New visibility setting.
+            parent_id: New parent project ID.
+            tracker_ids: New list of tracker IDs to enable.
+        """
+        token = get_access_token()
+
+        project_data: dict = {}
+        if name is not None:
+            project_data["name"] = name
+        if description is not None:
+            project_data["description"] = description
+        if is_public is not None:
+            project_data["is_public"] = is_public
+        if parent_id is not None:
+            project_data["parent_id"] = parent_id
+        if tracker_ids is not None:
+            project_data["tracker_ids"] = tracker_ids
+
+        if not project_data:
+            return "Error: no fields to update. Provide at least one field to change."
+
+        try:
+            await redmine.put(
+                f"/projects/{project_id}.json",
+                token=token.token,
+                json={"project": project_data},
+            )
+        except RedmineForbiddenError:
+            return f"Error: you do not have permission to update project '{project_id}'."
+        except RedmineNotFoundError:
+            return f"Error: project '{project_id}' not found in Redmine."
+        except RedmineValidationError as e:
+            return f"Error: validation failed — {'; '.join(e.errors) if e.errors else 'unknown error'}."
+
+        updated_fields = list(project_data.keys())
+        return f"Project '{project_id}' updated successfully. Changed: {', '.join(updated_fields)}."
+
+    # --- Wiki tools ---
+
+    @mcp.tool()
+    @requires_scopes(VIEW_WIKI_PAGES)
+    async def get_wiki_page(
+        project_id: str,
+        page_title: str = "Wiki",
+    ) -> str:
+        """Get a wiki page from a Redmine project.
+
+        Args:
+            project_id: Project identifier (required).
+            page_title: Wiki page title (default: "Wiki", the main page).
+        """
+        token = get_access_token()
+
+        try:
+            data = await redmine.get(
+                f"/projects/{project_id}/wiki/{page_title}.json",
+                token=token.token,
+            )
+        except RedmineForbiddenError:
+            return f"Error: you do not have permission to view wiki pages in project '{project_id}'."
+        except RedmineNotFoundError:
+            return f"Error: wiki page '{page_title}' not found in project '{project_id}'."
+
+        return _format_wiki_page(data)
+
+    @mcp.tool()
+    @requires_scopes(EDIT_WIKI_PAGES)
+    async def update_wiki_page(
+        project_id: str,
+        page_title: str,
+        content: str,
+        comments: str | None = None,
+    ) -> str:
+        """Create or update a wiki page in a Redmine project.
+
+        Args:
+            project_id: Project identifier (required).
+            page_title: Wiki page title (required). Creates page if it doesn't exist.
+            content: Wiki page content in Redmine textile/markdown format (required).
+            comments: Edit comment describing the change.
+        """
+        token = get_access_token()
+
+        wiki_data: dict = {"text": content}
+        if comments is not None:
+            wiki_data["comments"] = comments
+
+        try:
+            await redmine.put(
+                f"/projects/{project_id}/wiki/{page_title}.json",
+                token=token.token,
+                json={"wiki_page": wiki_data},
+            )
+        except RedmineForbiddenError:
+            return f"Error: you do not have permission to edit wiki pages in project '{project_id}'."
+        except RedmineNotFoundError:
+            return f"Error: project '{project_id}' not found in Redmine."
+        except RedmineValidationError as e:
+            return f"Error: validation failed — {'; '.join(e.errors) if e.errors else 'unknown error'}."
+
+        return f"Wiki page '{page_title}' in project '{project_id}' saved successfully."
+
+    @mcp.tool()
+    @requires_scopes(RENAME_WIKI_PAGES)
+    async def rename_wiki_page(
+        project_id: str,
+        page_title: str,
+        new_title: str,
+        create_redirect: bool = True,
+    ) -> str:
+        """Rename a wiki page in a Redmine project.
+
+        Args:
+            project_id: Project identifier (required).
+            page_title: Current wiki page title (required).
+            new_title: New title for the page (required).
+            create_redirect: Whether to create a redirect from old title (default: True).
+        """
+        token = get_access_token()
+
+        # Redmine renames wiki pages via PUT with the new title in the body
+        wiki_data: dict = {"title": new_title}
+        if not create_redirect:
+            wiki_data["redirect_existing_links"] = 0
+
+        try:
+            await redmine.put(
+                f"/projects/{project_id}/wiki/{page_title}.json",
+                token=token.token,
+                json={"wiki_page": wiki_data},
+            )
+        except RedmineForbiddenError:
+            return f"Error: you do not have permission to rename wiki pages in project '{project_id}'."
+        except RedmineNotFoundError:
+            return f"Error: wiki page '{page_title}' not found in project '{project_id}'."
+        except RedmineValidationError as e:
+            return f"Error: validation failed — {'; '.join(e.errors) if e.errors else 'unknown error'}."
+
+        redirect_note = " A redirect from the old title was created." if create_redirect else ""
+        return f"Wiki page renamed from '{page_title}' to '{new_title}' in project '{project_id}'.{redirect_note}"
+
+
+def _format_created_issue(data: dict) -> str:
+    """Format the response from creating an issue."""
+    issue = data.get("issue", {})
+    if not issue:
+        return "Issue created but response was empty."
+    iid = issue.get("id", "?")
+    subject = issue.get("subject", "")
+    project = issue.get("project", {}).get("name", "")
+    return f"Issue #{iid} created successfully in project '{project}': {subject}"
+
+
+def _format_created_project(data: dict) -> str:
+    """Format the response from creating a project."""
+    project = data.get("project", {})
+    if not project:
+        return "Project created but response was empty."
+    name = project.get("name", "")
+    identifier = project.get("identifier", "")
+    pid = project.get("id", "?")
+    return f"Project '{name}' (identifier: {identifier}, id={pid}) created successfully."
+
+
+def _format_wiki_page(data: dict) -> str:
+    """Format a wiki page response into readable text."""
+    page = data.get("wiki_page", {})
+    if not page:
+        return "Error: could not retrieve wiki page."
+
+    title = page.get("title", "Untitled")
+    version = page.get("version", "?")
+    author = page.get("author", {}).get("name", "Unknown")
+    updated_on = page.get("updated_on", "N/A")
+    text = page.get("text", "")
+
+    lines = [
+        f"# {title}",
+        "",
+        f"**Version:** {version} | **Author:** {author} | **Updated:** {updated_on}",
+        "",
+    ]
+    if text:
+        lines.append(text)
+    else:
+        lines.append("_(empty page)_")
+
+    return "\n".join(lines)
 
 
 def _format_issue_list(data: dict) -> str:

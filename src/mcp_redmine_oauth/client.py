@@ -27,6 +27,14 @@ class RedmineNotFoundError(RedmineAPIError):
     """404 Not Found — resource does not exist."""
 
 
+class RedmineValidationError(RedmineAPIError):
+    """422 Unprocessable Entity — validation failed (e.g. missing required fields)."""
+
+    def __init__(self, status_code: int, message: str, errors: list[str] | None = None):
+        self.errors = errors or []
+        super().__init__(status_code, message)
+
+
 class RedmineClient:
     """Thin async wrapper around Redmine's REST API.
 
@@ -90,6 +98,18 @@ class RedmineClient:
             raise RedmineForbiddenError(403, "Permission denied.")
         if response.status_code == 404:
             raise RedmineNotFoundError(404, "Resource not found in Redmine.")
+        if response.status_code == 422:
+            errors = []
+            try:
+                body = response.json()
+                errors = body.get("errors", [])
+            except Exception:
+                pass
+            raise RedmineValidationError(
+                422,
+                f"Validation failed: {'; '.join(errors) if errors else 'unknown error'}",
+                errors=errors,
+            )
         if response.status_code >= 500:
             raise RedmineAPIError(
                 response.status_code, f"Redmine server error ({response.status_code})."
