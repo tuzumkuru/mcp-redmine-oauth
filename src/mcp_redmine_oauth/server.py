@@ -13,6 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from mcp_redmine_oauth.auth import RedmineProvider
 from mcp_redmine_oauth.client import RedmineClient
+from mcp_redmine_oauth.prompts import register_prompts
 from mcp_redmine_oauth.resources import register_resources
 from mcp_redmine_oauth.scopes import get_effective_scopes, set_allowed_scopes
 from mcp_redmine_oauth.tools import register_tools
@@ -42,6 +43,7 @@ redmine = RedmineClient(base_url=REDMINE_URL)
 # Register MCP surface — @requires_scopes decorators populate the scope registry as a side effect
 register_tools(mcp, redmine)
 register_resources(mcp, redmine)
+register_prompts(mcp, redmine)
 
 # Optional: filter requested scopes to match what the Redmine OAuth app supports
 REDMINE_SCOPES = os.environ.get("REDMINE_SCOPES")

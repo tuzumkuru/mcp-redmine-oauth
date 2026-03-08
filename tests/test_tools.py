@@ -8,6 +8,8 @@ import pytest
 
 from mcp_redmine_oauth.tools import (
     MAX_JOURNAL_ENTRIES,
+    _format_created_issue,
+    _format_created_project,
     _format_issue,
     _format_issue_list,
     _format_project,
@@ -15,6 +17,7 @@ from mcp_redmine_oauth.tools import (
     _format_search_results,
     _format_time_entries,
     _format_versions,
+    _format_wiki_page,
 )
 
 
@@ -485,3 +488,89 @@ def test_format_time_entries_long_comment_truncated():
     }
     result = _format_time_entries(data)
     assert "…" in result
+
+
+# --- create_issue formatting ---
+
+
+def test_format_created_issue_basic():
+    data = {
+        "issue": {
+            "id": 99,
+            "subject": "New bug",
+            "project": {"name": "Alpha"},
+        }
+    }
+    result = _format_created_issue(data)
+    assert "Issue #99 created successfully" in result
+    assert "Alpha" in result
+    assert "New bug" in result
+
+
+def test_format_created_issue_empty():
+    assert "response was empty" in _format_created_issue({"issue": {}})
+
+
+# --- update_issue (no formatter — just string response) ---
+# Tested via integration with the tool; the formatter is inline.
+
+
+# --- create_project formatting ---
+
+
+def test_format_created_project_basic():
+    data = {
+        "project": {
+            "id": 7,
+            "name": "New Project",
+            "identifier": "new-project",
+        }
+    }
+    result = _format_created_project(data)
+    assert "New Project" in result
+    assert "new-project" in result
+    assert "id=7" in result
+    assert "created successfully" in result
+
+
+def test_format_created_project_empty():
+    assert "response was empty" in _format_created_project({"project": {}})
+
+
+# --- wiki page formatting ---
+
+
+def test_format_wiki_page_empty():
+    assert "could not retrieve" in _format_wiki_page({"wiki_page": {}})
+
+
+def test_format_wiki_page_basic():
+    data = {
+        "wiki_page": {
+            "title": "Installation",
+            "version": 3,
+            "author": {"name": "Alice"},
+            "updated_on": "2025-06-15T10:00:00Z",
+            "text": "h1. Installation Guide\n\nFollow these steps...",
+        }
+    }
+    result = _format_wiki_page(data)
+    assert "# Installation" in result
+    assert "**Version:** 3" in result
+    assert "**Author:** Alice" in result
+    assert "Installation Guide" in result
+    assert "Follow these steps" in result
+
+
+def test_format_wiki_page_empty_content():
+    data = {
+        "wiki_page": {
+            "title": "EmptyPage",
+            "version": 1,
+            "author": {"name": "Bob"},
+            "updated_on": "2025-01-01",
+            "text": "",
+        }
+    }
+    result = _format_wiki_page(data)
+    assert "_(empty page)_" in result

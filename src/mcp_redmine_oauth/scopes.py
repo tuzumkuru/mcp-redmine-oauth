@@ -26,6 +26,11 @@ SEARCH_PROJECT = "search_project"  # Required for /search.json and project-scope
 VIEW_TIME_ENTRIES = "view_time_entries"  # Phase 4: list_time_entries
 ADD_ISSUES = "add_issues"               # Phase 5: create_issue
 EDIT_ISSUES = "edit_issues"             # Phase 5: update_issue
+ADD_PROJECT = "add_project"             # Phase 5: create_project
+EDIT_PROJECT = "edit_project"           # Phase 5: update_project
+VIEW_WIKI_PAGES = "view_wiki_pages"     # Phase 5: get_wiki_page
+EDIT_WIKI_PAGES = "edit_wiki_pages"     # Phase 5: update_wiki_page
+RENAME_WIKI_PAGES = "rename_wiki_pages" # Phase 5: rename_wiki_page
 
 
 # --- Global scope registry (populated at decoration time) ---

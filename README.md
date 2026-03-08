@@ -110,24 +110,57 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 | `get_project_details` | Tool | `view_project` | Project details with trackers, categories, and enabled modules |
 | `get_project_versions` | Tool | `view_project` | Project versions/milestones with status and due dates |
 | `list_time_entries` | Tool | `view_time_entries` | List time entries with filters (project, user, date range) |
+| `create_issue` | Tool | `add_issues` | Create a new issue with subject, tracker, priority, assignee, etc. |
+| `update_issue` | Tool | `edit_issues` | Update an existing issue (status, assignee, notes, etc.) |
+| `create_project` | Tool | `add_project` | Create a new Redmine project |
+| `update_project` | Tool | `edit_project` | Update project name, description, visibility, trackers |
+| `get_wiki_page` | Tool | `view_wiki_pages` | Get a wiki page from a project |
+| `update_wiki_page` | Tool | `edit_wiki_pages` | Create or update a wiki page |
+| `rename_wiki_page` | Tool | `rename_wiki_pages` | Rename a wiki page with optional redirect |
+| `summarize_ticket` | Prompt | `view_issues` | Generate a concise summary of an issue with next steps |
+| `draft_bug_report` | Prompt | `view_project` | Draft a structured bug report from rough notes |
 | `redmine://projects/active` | Resource | `view_project` | List active projects |
 | `redmine://trackers` | Resource | `view_project` | List available trackers |
 | `redmine://issue-statuses` | Resource | `view_issues` | All issue statuses with IDs and closed flags |
 | `redmine://enumerations/priorities` | Resource | `view_issues` | Issue priority levels with IDs |
 | `redmine://users/me` | Resource | _(auth only)_ | Current authenticated user profile |
 
-Planned: `create_issue`, `update_issue`, prompts (`summarize_ticket`, `draft_bug_report`).
+Planned: persistent token storage, dynamic tool disabling by scope, structured logging.
 
 ## Required Redmine Scopes
 
-Enable these scopes on your Redmine OAuth application for full functionality:
+Enable these scopes on your Redmine OAuth application (**Administration → Applications**). They are grouped by the Redmine category as shown in the application settings.
 
-| Redmine Scope | Identifier | Used By |
+### Project
+
+| Redmine Permission | Scope Identifier | Used By |
 |---|---|---|
-| View Issues | `view_issues` | `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `redmine://issue-statuses`, `redmine://enumerations/priorities` |
-| View Projects | `view_project` | `get_project_details`, `get_project_versions`, `redmine://projects/active`, `redmine://trackers` |
-| Search Project | `search_project` | `search_issues` |
-| View Time Entries | `view_time_entries` | `list_time_entries` |
+| View projects | `view_project` | `get_project_details`, `get_project_versions`, `redmine://projects/active`, `redmine://trackers`, `draft_bug_report` |
+| Search projects | `search_project` | `search_issues` |
+| Create project | `add_project` | `create_project` |
+| Edit project | `edit_project` | `update_project` |
+
+### Issue tracking
+
+| Redmine Permission | Scope Identifier | Used By |
+|---|---|---|
+| View Issues | `view_issues` | `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `redmine://issue-statuses`, `redmine://enumerations/priorities`, `summarize_ticket` |
+| Add issues | `add_issues` | `create_issue` |
+| Edit issues | `edit_issues` | `update_issue` |
+
+### Time tracking
+
+| Redmine Permission | Scope Identifier | Used By |
+|---|---|---|
+| View spent time | `view_time_entries` | `list_time_entries` |
+
+### Wiki
+
+| Redmine Permission | Scope Identifier | Used By |
+|---|---|---|
+| View wiki | `view_wiki_pages` | `get_wiki_page` |
+| Edit wiki pages | `edit_wiki_pages` | `update_wiki_page` |
+| Rename wiki pages | `rename_wiki_pages` | `rename_wiki_page` |
 
 If a scope is not enabled, the tools that require it will return a descriptive error at call time.
 
