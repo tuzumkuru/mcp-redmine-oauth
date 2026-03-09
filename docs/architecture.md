@@ -65,10 +65,11 @@ All modules live under the `mcp_redmine_oauth` package (`src/mcp_redmine_oauth/`
 
 | Module | Responsibility |
 |---|---|
-| `server.py` | FastMCP app entry point; registers tools/resources, collects scopes, creates auth, starts server |
+| `server.py` | FastMCP app entry point; registers tools/resources, collects scopes, configures token store, creates auth, starts server |
 | `auth.py` | `RedmineProvider` (OAuthProxy subclass) + `RedmineTokenVerifier`; scope capture from token exchange |
 | `scopes.py` | `@requires_scopes` decorator, scope registry, allowlist filter, `check_scope` helper |
 | `client.py` | Thin async HTTP client wrapping Redmine REST API; receives Bearer token per call |
+| `storage.py` | Token store factory (`TOKEN_STORE_URL`) and SQLite key-value backend for OAuth/session state |
 | `tools.py` | MCP tools: `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `get_project_details`, `get_project_versions`, `list_time_entries`, `create_issue`, `update_issue`, `create_project`, `update_project`, `get_wiki_page`, `update_wiki_page`, `rename_wiki_page` |
 | `resources.py` | MCP resources: `projects/active`, `trackers`, `users/me`, `issue-statuses`, `enumerations/priorities` |
 | `prompts.py` | MCP prompts: `summarize_ticket`, `draft_bug_report` |
@@ -148,6 +149,7 @@ async def search_issues(query: str) -> str: ...
 | `MCP_HOST` | No | `0.0.0.0` | FastMCP bind host |
 | `MCP_PORT` | No | `8000` | FastMCP bind port |
 | `MCP_BASE_URL` | No | `http://localhost:MCP_PORT` | Public-facing URL for OAuth redirects |
+| `TOKEN_STORE_URL` | No | `sqlite:///.data/token_store.db` | Token backend URL. Supports SQLite (`sqlite://`) and Redis (`redis://`) |
 
 ---
 

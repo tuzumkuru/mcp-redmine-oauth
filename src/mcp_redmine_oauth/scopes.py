@@ -16,7 +16,8 @@ from functools import wraps
 from typing import Any, Callable
 
 from fastmcp.server.auth import AccessToken
-from fastmcp.server.dependencies import get_access_token
+from fastmcp.server.context import Context
+from fastmcp.server.dependencies import get_access_token, get_context
 
 # --- Scope constants ---
 
@@ -36,6 +37,8 @@ RENAME_WIKI_PAGES = "rename_wiki_pages" # Phase 5: rename_wiki_page
 # --- Global scope registry (populated at decoration time) ---
 
 _registry: set[str] = set()
+_scope_requirements_by_tool: dict[str, list[str]] = {}
+_scope_visibility_applied_sessions: set[str] = set()
 
 # Optional allowlist: when set, only these scopes are requested from Redmine.
 # Scopes declared by tools but not in this set won't be requested during OAuth;
@@ -73,6 +76,27 @@ def get_effective_scopes() -> list[str]:
     return sorted(_registry)
 
 
+async def _disable_tools_for_missing_scopes(token: AccessToken, context: Context | None) -> None:
+    """Disable out-of-scope tools per session on first authenticated request."""
+    if context is None or context.session_id is None:
+        return
+    session_id = str(context.session_id)
+    if session_id in _scope_visibility_applied_sessions:
+        return
+
+    granted = set(token.scopes or [])
+    tools_to_disable = {
+        tool_name
+        for tool_name, required_scopes in _scope_requirements_by_tool.items()
+        if required_scopes and not set(required_scopes).issubset(granted)
+    }
+
+    if tools_to_disable:
+        await context.disable_components(names=tools_to_disable, components={"tool"})
+
+    _scope_visibility_applied_sessions.add(session_id)
+
+
 # --- Decorator ---
 
 
@@ -84,23 +108,23 @@ def requires_scopes(*scopes: str) -> Callable:
 
     At call time: checks that the request is authenticated and that the token has
     all required scopes; returns a descriptive error string otherwise.
-
-    Usage::
-
-        @mcp.tool()
-        @requires_scopes(VIEW_ISSUES, SEARCH_PROJECT)
-        async def search_issues(query: str) -> str:
-            token = get_access_token()  # guaranteed non-None here
-            ...
     """
     _registry.update(scopes)
 
     def decorator(fn: Callable) -> Callable:
+        _scope_requirements_by_tool[fn.__name__] = list(scopes)
+
         @wraps(fn)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             token = get_access_token()
             if token is None:
                 return "Error: not authenticated. Please complete the OAuth flow first."
+
+            context = kwargs.get("context")
+            if not isinstance(context, Context):
+                context = get_context()
+            await _disable_tools_for_missing_scopes(token, context)
+
             if scopes:
                 if err := check_scope(token, *scopes):
                     return err

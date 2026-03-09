@@ -2,77 +2,102 @@
 
 from __future__ import annotations
 
-import pytest
+import asyncio
 
 from mcp_redmine_oauth.auth import RedmineProvider, RedmineTokenVerifier
 from mcp_redmine_oauth.scopes import VIEW_ISSUES, get_registered_scopes
 
 
-# --- _extract_upstream_claims ---
+class InMemoryScopeStore:
+    def __init__(self):
+        self.data: dict[tuple[str, str], dict] = {}
+
+    async def get(self, key: str, *, collection: str | None = None):
+        return self.data.get((collection or "default", key))
+
+    async def put(self, key: str, value: dict, *, collection: str | None = None, ttl=None):
+        self.data[(collection or "default", key)] = value
 
 
-@pytest.mark.asyncio
-async def test_extract_upstream_claims_stores_scope():
+def test_extract_upstream_claims_stores_scope():
     """Scopes from Redmine token response are stored in scope_store."""
-    scope_store: dict[str, list[str]] = {}
-    provider = RedmineProvider(
-        redmine_url="https://redmine.example.com",
-        client_id="cid",
-        client_secret="csec",
-        base_url="http://localhost:8000",
-        scopes=get_registered_scopes(),
-    )
-    # Inject our own scope_store so we can inspect it
-    provider._scope_store = scope_store
-    provider._token_validator._scope_store = scope_store  # type: ignore[attr-defined]
 
-    idp_tokens = {
-        "access_token": "tok_abc123",
-        "scope": "view_issues view_project",
-        "token_type": "Bearer",
-    }
-    result = await provider._extract_upstream_claims(idp_tokens)
+    async def _run() -> None:
+        scope_store = InMemoryScopeStore()
+        provider = RedmineProvider(
+            redmine_url="https://redmine.example.com",
+            client_id="cid",
+            client_secret="csec",
+            base_url="http://localhost:8000",
+            scopes=get_registered_scopes(),
+            scope_store=scope_store,
+        )
 
-    assert result is None  # Should not embed extra claims in JWT
-    assert scope_store["tok_abc123"] == ["view_issues", "view_project"]
+        idp_tokens = {
+            "access_token": "tok_abc123",
+            "scope": "view_issues view_project",
+            "token_type": "Bearer",
+        }
+        result = await provider._extract_upstream_claims(idp_tokens)
+
+        assert result is None
+        stored = await scope_store.get("tok_abc123", collection="scope_store")
+        assert stored == {"scopes": ["view_issues", "view_project"]}
+
+    asyncio.run(_run())
 
 
-@pytest.mark.asyncio
-async def test_extract_upstream_claims_no_scope_field():
+def test_extract_upstream_claims_no_scope_field():
     """Missing scope field in token response leaves scope_store unchanged."""
-    scope_store: dict[str, list[str]] = {}
-    provider = RedmineProvider(
-        redmine_url="https://redmine.example.com",
-        client_id="cid",
-        client_secret="csec",
-        base_url="http://localhost:8000",
-        scopes=get_registered_scopes(),
-    )
-    provider._scope_store = scope_store
 
-    idp_tokens = {"access_token": "tok_xyz", "token_type": "Bearer"}
-    await provider._extract_upstream_claims(idp_tokens)
+    async def _run() -> None:
+        scope_store = InMemoryScopeStore()
+        provider = RedmineProvider(
+            redmine_url="https://redmine.example.com",
+            client_id="cid",
+            client_secret="csec",
+            base_url="http://localhost:8000",
+            scopes=get_registered_scopes(),
+            scope_store=scope_store,
+        )
 
-    assert "tok_xyz" not in scope_store
+        idp_tokens = {"access_token": "tok_xyz", "token_type": "Bearer"}
+        await provider._extract_upstream_claims(idp_tokens)
 
+        stored = await scope_store.get("tok_xyz", collection="scope_store")
+        assert stored is None
 
-# --- RedmineTokenVerifier scope fallback ---
+    asyncio.run(_run())
 
 
 def test_verifier_falls_back_to_registered_scopes_when_token_not_in_store():
-    """verify_token uses get_registered_scopes() as fallback when token not yet in scope_store."""
-    scope_store: dict[str, list[str]] = {}
-    RedmineTokenVerifier(
-        redmine_url="https://redmine.example.com",
-        scope_store=scope_store,
-    )
-    # scope_store is empty; fallback should be registered scopes (a list, possibly empty in test context)
-    granted = scope_store.get("unknown_token", get_registered_scopes())
-    assert isinstance(granted, list)
+    """verify_token fallback path remains list-typed when token is absent in scope_store."""
+
+    async def _run() -> None:
+        scope_store = InMemoryScopeStore()
+        verifier = RedmineTokenVerifier(
+            redmine_url="https://redmine.example.com",
+            scope_store=scope_store,
+        )
+        scope_entry = await verifier._scope_store.get("unknown_token", collection="scope_store")
+        granted = scope_entry.get("scopes", get_registered_scopes()) if scope_entry else get_registered_scopes()
+        assert isinstance(granted, list)
+
+    asyncio.run(_run())
 
 
 def test_verifier_uses_stored_scopes_when_present():
     """verify_token uses scope_store when the token is present."""
-    scope_store: dict[str, list[str]] = {"tok_123": [VIEW_ISSUES]}
-    granted = scope_store.get("tok_123", get_registered_scopes())
-    assert granted == [VIEW_ISSUES]
+
+    async def _run() -> None:
+        scope_store = InMemoryScopeStore()
+        await scope_store.put("tok_123", {"scopes": [VIEW_ISSUES]}, collection="scope_store")
+        verifier = RedmineTokenVerifier(
+            redmine_url="https://redmine.example.com",
+            scope_store=scope_store,
+        )
+        scope_entry = await verifier._scope_store.get("tok_123", collection="scope_store")
+        granted = scope_entry.get("scopes", get_registered_scopes()) if scope_entry else get_registered_scopes()
+        assert granted == [VIEW_ISSUES]
+
+    asyncio.run(_run())

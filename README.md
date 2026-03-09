@@ -98,6 +98,7 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 | `MCP_HOST` | No | `0.0.0.0` | Bind host |
 | `MCP_PORT` | No | `8000` | Bind port |
 | `MCP_BASE_URL` | No | `http://localhost:MCP_PORT` | Public-facing URL used for OAuth redirects |
+| `TOKEN_STORE_URL` | No | `sqlite:///.data/token_store.db` | Token backend for OAuth state + captured scopes (`sqlite://...` or `redis://...`) |
 
 ## Available Tools & Resources
 
@@ -125,7 +126,7 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 | `redmine://enumerations/priorities` | Resource | `view_issues` | Issue priority levels with IDs |
 | `redmine://users/me` | Resource | _(auth only)_ | Current authenticated user profile |
 
-Planned: persistent token storage, dynamic tool disabling by scope, structured logging.
+Includes: persistent token storage (SQLite default, Redis optional), dynamic tool disabling by scope, structured logging, and `/health` endpoint.
 
 ## Required Redmine Scopes
 

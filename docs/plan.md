@@ -216,25 +216,25 @@
 - Multiple users can connect simultaneously with fully isolated sessions
 
 ### Persistent Token Storage
-- [ ] Implement SQLite backend for `OAuthProxy` token store (also persists `scope_store` in `auth.py`)
-- [ ] Make backend selectable via `TOKEN_STORE_URL` env var (default: SQLite, optional: Redis)
-- [ ] Test: token survives server restart
+- [x] Implement SQLite backend for `OAuthProxy` token store (also persists `scope_store` in `auth.py`)
+- [x] Make backend selectable via `TOKEN_STORE_URL` env var (default: SQLite, optional: Redis)
+- [x] Test: token survives server restart
 
 ### Dynamic Tool Disabling by Scope
-- [ ] Extend `requires_scopes` wrapper to accept injected `Context` (FastMCP dependency injection)
-- [ ] On first authenticated call per session: iterate scope registry, call `disable_components(context, ...)` for tools with unmet scopes
-- [ ] Client receives `ToolListChangedNotification` — tools disappear from list if scope not granted
+- [x] Extend `requires_scopes` wrapper to accept injected `Context` (FastMCP dependency injection)
+- [x] On first authenticated call per session: iterate scope registry, call `disable_components(context, ...)` for tools with unmet scopes
+- [x] Client receives `ToolListChangedNotification` — tools disappear from list if scope not granted
 
 ### Observability
-- [ ] Add structured logging (request in/out, OAuth events, Redmine API errors)
-- [ ] Expose `/health` endpoint returning server status
+- [x] Add structured logging (request in/out, OAuth events, Redmine API errors)
+- [x] Expose `/health` endpoint returning server status
 
 ### Integration Tests
-- [ ] End-to-end OAuth flow test against a real (or test) Redmine instance
-- [ ] Concurrent multi-user session test: two clients, isolated Redmine tokens
+- [x] End-to-end OAuth flow test against a real (or test) Redmine instance
+- [x] Concurrent multi-user session test: two clients, isolated Redmine tokens
 
 ### Version
-- [ ] `pyproject.toml`: bump to `0.6.0`
+- [x] `pyproject.toml`: bump to `0.6.0`
 
 ---
 
