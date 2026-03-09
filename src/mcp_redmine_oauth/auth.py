@@ -34,7 +34,7 @@ class RedmineTokenVerifier(TokenVerifier):
         *,
         redmine_url: str,
         timeout_seconds: int = 10,
-        scope_store: dict[str, list[str]],
+        scope_store: AsyncKeyValue,
     ):
         super().__init__()
         self.redmine_url = redmine_url.rstrip("/")
@@ -51,7 +51,7 @@ class RedmineTokenVerifier(TokenVerifier):
 
                 if response.status_code != 200:
                     logger.debug(
-                        "Redmine token verification failed: %d",
+                        "event=token_verification_failed status_code=%d",
                         response.status_code,
                     )
                     return None
@@ -61,7 +61,15 @@ class RedmineTokenVerifier(TokenVerifier):
 
                 # Use scopes captured during token exchange; fall back to all registered scopes
                 # (covers token-refresh case where _extract_upstream_claims wasn't called)
-                granted_scopes = self._scope_store.get(token, get_registered_scopes())
+                scope_entry = await self._scope_store.get(token, collection="scope_store")
+                granted_scopes = scope_entry.get("scopes", get_registered_scopes()) if scope_entry else get_registered_scopes()
+
+                logger.info(
+                    "event=token_verified user_id=%s login=%s scopes=%s",
+                    user.get("id"),
+                    user.get("login"),
+                    " ".join(granted_scopes),
+                )
 
                 return AccessToken(
                     token=token,
@@ -78,22 +86,12 @@ class RedmineTokenVerifier(TokenVerifier):
                 )
 
         except httpx.RequestError as e:
-            logger.debug("Failed to verify Redmine token: %s", e)
+            logger.warning("event=token_verification_error error=%s", e)
             return None
 
 
 class RedmineProvider(OAuthProxy):
-    """OAuth provider connecting FastMCP to a Redmine 6.1+ instance.
-
-    Usage:
-        auth = RedmineProvider(
-            redmine_url="https://redmine.example.com",
-            client_id="your-client-id",
-            client_secret="your-client-secret",
-            base_url="http://localhost:8000",
-        )
-        mcp = FastMCP("Redmine MCP", auth=auth)
-    """
+    """OAuth provider connecting FastMCP to a Redmine 6.1+ instance."""
 
     def __init__(
         self,
@@ -106,12 +104,13 @@ class RedmineProvider(OAuthProxy):
         redirect_path: str | None = None,
         allowed_client_redirect_uris: list[str] | None = None,
         client_storage: AsyncKeyValue | None = None,
+        scope_store: AsyncKeyValue,
         jwt_signing_key: str | bytes | None = None,
         require_authorization_consent: bool = False,
     ):
         redmine_url = redmine_url.rstrip("/")
 
-        self._scope_store: dict[str, list[str]] = {}
+        self._scope_store = scope_store
         token_verifier = RedmineTokenVerifier(
             redmine_url=redmine_url,
             scope_store=self._scope_store,
@@ -135,9 +134,7 @@ class RedmineProvider(OAuthProxy):
             extra_authorize_params=extra_authorize_params,
         )
 
-        logger.debug(
-            "Initialized Redmine OAuth provider for %s", redmine_url
-        )
+        logger.info("event=oauth_provider_initialized redmine_url=%s", redmine_url)
 
     async def _extract_upstream_claims(
         self, idp_tokens: dict[str, Any]
@@ -146,8 +143,15 @@ class RedmineProvider(OAuthProxy):
         access_token = idp_tokens.get("access_token", "")
         scope_str = idp_tokens.get("scope", "")
         if access_token and scope_str:
-            self._scope_store[access_token] = scope_str.split()
-            logger.debug(
-                "Captured scopes for token …%s: %s", access_token[-6:], scope_str
+            scopes = scope_str.split()
+            await self._scope_store.put(
+                access_token,
+                {"scopes": scopes},
+                collection="scope_store",
+            )
+            logger.info(
+                "event=token_scopes_captured token_tail=%s scopes=%s",
+                access_token[-6:],
+                scope_str,
             )
         return None  # Don't embed extra claims in the FastMCP JWT

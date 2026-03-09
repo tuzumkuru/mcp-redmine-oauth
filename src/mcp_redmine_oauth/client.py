@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
+from fastmcp.utilities.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class RedmineAPIError(Exception):
@@ -49,6 +52,7 @@ class RedmineClient:
     async def get(
         self, path: str, token: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
+        logger.info("event=redmine_request method=GET path=%s", path)
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.get(
                 f"{self.base_url}{path}",
@@ -56,11 +60,13 @@ class RedmineClient:
                 headers={"Authorization": f"Bearer {token}"},
             )
         self._raise_for_status(response)
+        logger.info("event=redmine_response method=GET path=%s status_code=%d", path, response.status_code)
         return response.json()
 
     async def post(
         self, path: str, token: str, json: dict[str, Any] | None = None
     ) -> dict[str, Any]:
+        logger.info("event=redmine_request method=POST path=%s", path)
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
                 f"{self.base_url}{path}",
@@ -71,11 +77,13 @@ class RedmineClient:
                 },
             )
         self._raise_for_status(response)
+        logger.info("event=redmine_response method=POST path=%s status_code=%d", path, response.status_code)
         return response.json()
 
     async def put(
         self, path: str, token: str, json: dict[str, Any] | None = None
     ) -> dict[str, Any] | None:
+        logger.info("event=redmine_request method=PUT path=%s", path)
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.put(
                 f"{self.base_url}{path}",
@@ -86,12 +94,15 @@ class RedmineClient:
                 },
             )
         self._raise_for_status(response)
+        logger.info("event=redmine_response method=PUT path=%s status_code=%d", path, response.status_code)
         if response.status_code == 204:
             return None
         return response.json()
 
     @staticmethod
     def _raise_for_status(response: httpx.Response) -> None:
+        if response.status_code >= 400:
+            logger.warning("event=redmine_error status_code=%d body=%s", response.status_code, response.text[:300])
         if response.status_code == 401:
             raise RedmineAuthError(401, "Authentication failed — token may be expired.")
         if response.status_code == 403:
