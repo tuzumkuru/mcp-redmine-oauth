@@ -12,9 +12,12 @@ build/
 .venv/
 venv/
 
-# Claude
-.claude/
+# Claude — skills and agents are project files; only local settings are ignored
+.claude/settings.local.json
 
 # IDE
 .vscode/
 .idea/
+
+# SDLC framework (cloned reference — not part of this project)
+.sdlc-framework/
