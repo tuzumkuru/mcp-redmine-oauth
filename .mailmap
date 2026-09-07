@@ -1,0 +1,3 @@
+# Canonical authorship. Maps historical addresses to the current one so
+# git log / shortlog / blame show a single identity without rewriting history.
+Tolga Uzun <tolgauzun@gmail.com> <tolga.uzun@bamateknoloji.com>
