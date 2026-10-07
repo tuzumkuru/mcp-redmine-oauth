@@ -19,5 +19,3 @@ venv/
 .vscode/
 .idea/
 
-# SDLC framework (cloned reference — not part of this project)
-.sdlc-framework/
