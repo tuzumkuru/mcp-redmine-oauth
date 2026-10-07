@@ -1,267 +1,164 @@
 # Development Plan — Redmine FastMCP Server with OAuth
 
-## Task Status Convention
+Progress: `[ ]` not started · `[-]` in progress · `[x]` done · `[!]` blocked · `[~]` skipped
 
-| Mark | Meaning |
-|---|---|
-| `[ ]` | Not started |
-| `[-]` | In progress |
-| `[x]` | Done |
-| `[!]` | Blocked |
-| `[~]` | Skipped / out of scope |
+Each phase that changes the server ends with a version bump, made on `main` after the phase's work merges (see [AGENTS.md](../AGENTS.md) § *Git*). Decisions are in [decisions.md](decisions.md), risks in [risks.md](risks.md).
 
 ---
 
-## Phase 1: MVP — Core Auth + One Tool → `v0.1.0`
+## Done: Phases 1 to 6
 
-**Goal:** A working FastMCP server where a real MCP client can authenticate via Redmine OAuth and call one tool successfully.
-
-**Success Criteria:**
-- MCP client connects to the FastMCP server
-- User is redirected to Redmine, logs in, and approves access
-- `get_issue_details` returns real data for a given issue ID
-- Auth flow works end-to-end with in-memory token store
-
-### Project Setup
-- [x] Initialize `pyproject.toml` with dependencies: `fastmcp`, `httpx`, `python-dotenv`
-- [x] Create `src/` directory with module files
-- [x] Create `.env.example` with all required variables
-
-### FastMCP Server
-- [x] `server.py`: Create FastMCP app instance with Streamable HTTP transport
-- [x] `server.py`: Mount `OAuthProxy` and register tools, resources, prompts
-
-### OAuth Integration
-- [x] `auth.py`: Configure `OAuthProxy` pointing to Redmine's authorize and token endpoints
-- [x] `auth.py`: Wire in `REDMINE_CLIENT_ID`, `REDMINE_CLIENT_SECRET`, and redirect URI
-- [x] `auth.py`: Set up in-memory token store (OAuthProxy default)
-
-### Redmine HTTP Client
-- [x] `client.py`: Async HTTP client using `httpx` with base URL from `REDMINE_URL`
-- [x] `client.py`: Accept Bearer token per call; set `Authorization` header automatically
-- [x] `client.py`: Raise typed errors for 401, 403, 404, 5xx responses
-
-### First Tool
-- [x] `tools.py`: Implement `get_issue_details(issue_id)` — fetches issue with `?include=journals`
-- [x] `tools.py`: Retrieve Redmine token from session via `get_access_token()` and pass to client
-
-### Auth UX
-- [x] Disable FastMCP authorization consent screen — Redmine login/consent is the real gate; the extra FastMCP screen is redundant friction for a centrally-deployed server
-
-### Version
-- [x] `pyproject.toml`: version `0.1.0` (initial)
+| Phase | Version | What shipped |
+|---|---|---|
+| 1. MVP: core auth and one tool | v0.1.0 | FastMCP server with Streamable HTTP, `OAuthProxy` to Redmine, async Redmine client, `get_issue_details` |
+| 2. Containerization | (in v0.3.0) | Multi-stage Dockerfile with a non-root user, docker compose |
+| 3. Read operations | v0.3.0 | `search_issues`, 3 resources, journal truncation, pagination, the `@requires_scopes` scope registry |
+| 4. Extended read operations | v0.4.0 | `list_issues`, relations, project details and versions, time entries, 2 more resources |
+| 5. Write operations and prompts | v0.5.0 | Issue, project and wiki write tools; `summarize_ticket` and `draft_bug_report` prompts |
+| 6. Claude Code login fix | v0.5.1 | Require `fastmcp>=3.4.8`: FastMCP before 3.2.0 rejected Claude Code's loopback callback on a random port (DR-001, [report](reports/2026-10-05-review.md)) |
 
 ---
 
-## Phase 2: Containerization → `v0.2.0`
+## Phase 7: Repo cleanup and engineering baseline
 
-**Goal:** The MCP server runs in a Docker container with only env var configuration.
+**Goal:** The repo is self-contained, and every change is tested in CI against a real Redmine (DR-004). No change in behaviour.
 
-**Dependencies:** Phase 1 complete.
+### Tasks
+- [-] Move the development documents into this repo; drop the old framework (`.sdlc-framework` references, `.claude/` tooling); standalone `AGENTS.md`
+- [ ] `pyproject.toml`: build system, dev dependency group (pytest, pytest-asyncio, ruff, pyright), pytest settings
+- [ ] Add `.gitattributes`
+- [ ] Add ruff and pyright settings; fix what they report
+- [ ] Test Redmine in Docker: compose file and seed script (projects, users, roles, issues, wiki pages, an OAuth app), for local runs and CI
+- [ ] GitHub Actions: lint, type check and unit tests on Python 3.11 to 3.13; integration tests against Redmine 6.1 and 7.0 from the test Redmine
+- [ ] Dependabot for pip, Docker and GitHub Actions
+- [ ] Docker: `HEALTHCHECK`; stop `.dockerignore` excluding `README.md`
+- [ ] Check settings at startup and fail with a clear message (today a missing variable raises a bare `KeyError`)
+- [ ] Phase 7 close
 
-**Success Criteria:**
-- Docker image builds from the repo
-- Server is reachable from an MCP client when running in a container
-
-### Docker
-- [x] Write `Dockerfile` for the MCP server (multi-stage, non-root user)
-- [x] Write `docker-compose.yml` for the MCP server only (no inspector, no Redmine — those are external)
-- [x] Test: image builds and server is reachable from an MCP client
-
-### Version
-- [~] `pyproject.toml`: bump to `0.2.0` — skipped, caught up in Phase 3 bump
-
----
-
-## Phase 3: Basic Tools — Read Operations → `v0.3.0`
-
-**Goal:** All read-only tools and resources are working.
-
-**Dependencies:** Phase 2 complete.
-
-**Success Criteria:**
-- `search_issues` returns results in Claude Desktop
-- All 3 resources return correct data
-- Large journal histories are truncated without crashing
-- Paginated search results are handled correctly
-
-### Tools
-- [x] `tools.py`: `search_issues(query, project_id?, open_issues_only?)` — uses `/search.json` for full-text search
-- [x] Truncate journal history in `get_issue_details` when entries exceed `MAX_JOURNAL_ENTRIES` (25)
-- [x] Handle Redmine API pagination for `search_issues` results (offset/limit with metadata)
-
-### Resources
-- [x] `resources.py`: `redmine://projects/active` — active projects accessible to the user
-- [x] `resources.py`: `redmine://trackers` — available trackers with IDs
-- [x] `resources.py`: `redmine://users/me` — authenticated user profile
-
-### Scope Architecture
-- [x] `scopes.py`: `@requires_scopes(*scopes)` decorator — declares required scopes at decoration time (auto-populates registry) and enforces auth + scope at call time
-- [x] `scopes.py`: `get_registered_scopes()` replaces manual `ALL_SCOPES` list — server always requests exactly what the tools need
-- [x] `scopes.py`: `set_allowed_scopes()` / `get_effective_scopes()` — optional `REDMINE_SCOPES` env var filters requested scopes to what the Redmine OAuth app supports (intersection of declared and allowed)
-- [x] All tools and resources declare scopes via `@requires_scopes` — no inline `check_scope()` calls in function bodies
-- [x] `server.py`: register tools/resources first, auto-collect scopes via `get_effective_scopes()`, create `RedmineProvider`, then set `mcp.auth`; reads optional `REDMINE_SCOPES` env var as allowlist filter
-- [x] `auth.py`: `_extract_upstream_claims` captures granted scopes from Redmine token exchange; `verify_token` sets real `AccessToken.scopes`
-
-### Tests
-- [x] Unit tests for `search_issues` with mocked `client.py`
-- [x] Unit tests for all resources with mocked `client.py`
-- [x] Unit tests for `requires_scopes` decorator (registry, auth guard, scope guard, passthrough)
-- [x] Unit tests for `_extract_upstream_claims` scope capture in `auth.py`
-
-### Version
-- [x] `pyproject.toml`: bump to `0.3.0`
+**Exit criteria:**
+- CI runs on every push and pull request, and passes on `main`
+- Integration tests run against Redmine 6.1 and 7.0
+- No file loads or links the old `.sdlc-framework`
 
 ---
 
-## Phase 4: Extended Read Operations → `v0.4.0`
+## Phase 8: Production hardening → v0.6.0
 
-**Goal:** Comprehensive read-only access to Redmine data — filtered issue queries, project details, relations, versions, and reference data.
+**Goal:** Users stay logged in across restarts, each sees only the tools their Redmine grant allows, and the server is safe to run for a whole company.
 
-**Dependencies:** Phase 3 complete.
+### Tasks
+- [ ] Keep the granted scopes in FastMCP's token (`upstream_claims`); remove `_scope_store` (RISK-001)
+- [ ] Persistent, encrypted login storage: fixed `JWT_SIGNING_KEY`, storage on a Docker volume (or Redis), documented in `.env.example` (RISK-002)
+- [ ] Hide tools the user's scopes do not allow, with FastMCP's per-tool scope check (DR-003, RISK-004)
+- [ ] Read-only mode: write scopes are left out of the login request and write tools are refused
+- [ ] Check `REDMINE_SCOPES` at startup and stop with a message listing the scopes the server accepts
+- [ ] When Redmine refuses the login with `invalid_scope`, show which scopes to tick on the Redmine OAuth app
+- [ ] Decide the consent screen setting (`remember` or off) and record it as a DR (RISK-003)
+- [ ] `/health` route
+- [ ] Logging of requests, OAuth events and Redmine errors, with no tokens or response bodies
+- [ ] Tool errors: set the MCP error flag; handle 401, other 4xx, 5xx and network errors
+- [ ] Escape IDs and page titles in Redmine URLs; reuse one HTTP client
+- [ ] Tests: two users stay separate; login survives a restart; scopes survive a token refresh
+- [ ] Update README and architecture notes; CHANGELOG; bump to 0.6.0
+- [ ] Phase 8 close
 
-**Success Criteria:**
-- `list_issues` with filters returns correct results (assignee, status, tracker, project)
-- `assigned_to_id=me` shortcut works for "my issues" queries
-- Issue relations and project versions are accessible
-- All reference data resources return valid data
-- Unit tests for all new tools and resources
-
-### Tools
-- [x] `tools.py`: `list_issues(project_id?, assigned_to_id?, status_id?, tracker_id?, sort?, offset?, limit?)` — filtered issue listing via `/issues.json`; support `assigned_to_id="me"` shortcut
-- [x] `tools.py`: `get_issue_relations(issue_id)` — blocking/blocked-by/related links via `/issues/{id}/relations.json`
-- [x] `tools.py`: `get_project_details(project_id)` — single project with categories, modules, custom fields via `/projects/{id}.json?include=trackers,issue_categories,enabled_modules`
-- [x] `tools.py`: `get_project_versions(project_id)` — milestones/releases via `/projects/{id}/versions.json`
-- [x] `tools.py`: `list_time_entries(project_id?, user_id?, from_date?, to_date?, offset?, limit?)` — time entries via `/time_entries.json`
-
-### Resources
-- [x] `resources.py`: `redmine://issue-statuses` — all status values (New, In Progress, Closed…) via `/issue_statuses.json`
-- [x] `resources.py`: `redmine://enumerations/priorities` — priority levels (Low, Normal, High…) via `/enumerations/issue_priorities.json`
-
-### Scopes
-- [x] `scopes.py`: add `VIEW_TIME_ENTRIES = "view_time_entries"` constant
-
-### Tests
-- [x] Unit tests for `list_issues` with mocked filters and pagination
-- [x] Unit tests for `get_issue_relations`, `get_project_details`, `get_project_versions`
-- [x] Unit tests for `list_time_entries` with mocked date range filters
-- [x] Unit tests for new resources (`issue-statuses`, `enumerations/priorities`)
-
-### Documentation
-- [x] Update `README.md` tools/resources table and required scopes
-- [x] Update `docs/architecture.md` scope mapping table
-
-### Version
-- [x] `pyproject.toml`: bump to `0.4.0`
+**Exit criteria:**
+- Restarting or recreating the container does not log users out
+- A user without a scope does not see the tools that need it
 
 ---
 
-## Phase 5: Write Operations + Prompts → `v0.5.0`
+## Phase 9: Safety and MCP quality → v0.7.0
 
-**Goal:** Write tools and AI prompts are working end-to-end.
+**Goal:** Agents propose changes as prefilled Redmine forms, clients can tell reading tools from writing ones, admins can limit what the server exposes, and large or hostile Redmine content cannot flood or steer the model.
 
-**Dependencies:** Phase 4 complete.
+### Tasks
+- [ ] Tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`) on every tool, with a test that fails when one is missing
+- [ ] Tool allowlist, set by environment variable
+- [ ] Link tools (DR-003): `draft_new_issue` and `draft_issue_update` return a Redmine form link filled with the proposed values; nothing is saved until the user submits
+- [ ] Check whether Redmine's project form also takes values from the link; if so, add `draft_new_project` and `draft_project_update`
+- [ ] Link length: the link tools' descriptions tell the agent the URL length limit and to keep long text short. When a link would exceed it, the tool returns a warning to the agent with the text that did not fit, for the user to paste, instead of a link that fails
+- [ ] Response size limit and one pagination format for every list
+- [ ] Mark text that comes from Redmine so the model treats it as data, not instructions
+- [ ] Split `tools.py` (921 lines) by area: issues, projects, wiki, time
+- [ ] Fix `rename_wiki_page`, which sends a field Redmine probably does not accept
+- [ ] CHANGELOG; bump to 0.7.0
+- [ ] Phase 9 close
 
-**Success Criteria:**
-- `create_issue` and `update_issue` work in Claude Desktop
-- `create_project` and `update_project` work with correct scope enforcement
-- Wiki read/write operations work end-to-end
-- Both prompts execute correctly
-
-### Tools — Issues
-- [x] `tools.py`: `create_issue(project_id, subject, tracker_id?, description?, priority_id?, assigned_to_id?, status_id?, category_id?, fixed_version_id?, parent_issue_id?)`
-- [x] `tools.py`: `update_issue(issue_id, notes?, status_id?, assigned_to_id?, priority_id?, subject?, description?, tracker_id?, category_id?, fixed_version_id?)`
-
-### Tools — Projects
-- [x] `tools.py`: `create_project(name, identifier, description?, is_public?, parent_id?, tracker_ids?)` — `POST /projects.json`; requires `add_project` scope
-- [x] `tools.py`: `update_project(project_id, name?, description?, is_public?, parent_id?, tracker_ids?)` — `PUT /projects/{id}.json`; requires `edit_project` scope
-
-### Tools — Wiki
-- [x] `tools.py`: `get_wiki_page(project_id, page_title?)` — `GET /projects/{id}/wiki/{title}.json`; defaults to main wiki page; requires `view_wiki_pages` scope
-- [x] `tools.py`: `update_wiki_page(project_id, page_title, content, comments?)` — `PUT /projects/{id}/wiki/{title}.json`; requires `edit_wiki_pages` scope
-- [x] `tools.py`: `rename_wiki_page(project_id, page_title, new_title, create_redirect?)` — `PUT /projects/{id}/wiki/{title}.json` with `wiki_page[title]`; requires `rename_wiki_pages` scope
-
-### Scopes
-- [x] `scopes.py`: add `ADD_ISSUES`, `EDIT_ISSUES`, `ADD_PROJECT`, `EDIT_PROJECT` constants
-- [x] `scopes.py`: add `VIEW_WIKI_PAGES`, `EDIT_WIKI_PAGES`, `RENAME_WIKI_PAGES` constants
-
-### Prompts
-- [x] `prompts.py`: `summarize_ticket(issue_id)`
-- [x] `prompts.py`: `draft_bug_report(project_id, rough_notes)`
-
-### Tests
-- [x] Unit tests for `create_issue` and `update_issue` formatters
-- [x] Unit tests for `create_project` and `update_project` formatters
-- [x] Unit tests for wiki tools (`get_wiki_page` formatter)
-- [x] Unit tests for prompts (`summarize_ticket`, `draft_bug_report`)
-- [x] Unit tests for `RedmineValidationError` (422) in client
-
-### Documentation
-- [x] Update `README.md` tools/resources table and required scopes
-- [x] Update `docs/architecture.md` module table and scope mapping
-
-### Version
-- [x] `pyproject.toml`: bump to `0.5.0`
+**Exit criteria:**
+- Every tool carries annotations
+- A read-only deployment exposes no tool that writes
 
 ---
 
-## Phase 6: Production Hardening → `v0.6.0`
+## Phase 10: More Redmine coverage → v0.8.0
 
-**Goal:** Server is stable, observable, and sessions survive restarts.
+**Goal:** Cover the common Redmine work that similar servers already support.
 
-**Dependencies:** Phase 5 complete.
+### Tasks
+- [ ] Create and update time entries; list time entry activities
+- [ ] Attachments: download with a size limit (images returned so the model can see them) and upload
+- [ ] Watchers; create and delete issue relations
+- [ ] One tool that returns a project's trackers, statuses, members and custom fields
+- [ ] CHANGELOG; bump to 0.8.0
+- [ ] Phase 10 close
 
-**Success Criteria:**
-- Restarting the server does not log out connected users
-- Multiple users can connect simultaneously with fully isolated sessions
-
-### Persistent Token Storage
-- [ ] Implement SQLite backend for `OAuthProxy` token store (also persists `scope_store` in `auth.py`)
-- [ ] Make backend selectable via `TOKEN_STORE_URL` env var (default: SQLite, optional: Redis)
-- [ ] Test: token survives server restart
-
-### Dynamic Tool Disabling by Scope
-- [ ] Extend `requires_scopes` wrapper to accept injected `Context` (FastMCP dependency injection)
-- [ ] On first authenticated call per session: iterate scope registry, call `disable_components(context, ...)` for tools with unmet scopes
-- [ ] Client receives `ToolListChangedNotification` — tools disappear from list if scope not granted
-
-### Observability
-- [ ] Add structured logging (request in/out, OAuth events, Redmine API errors)
-- [ ] Expose `/health` endpoint returning server status
-
-### Integration Tests
-- [ ] End-to-end OAuth flow test against a real (or test) Redmine instance
-- [ ] Concurrent multi-user session test: two clients, isolated Redmine tokens
-
-### Version
-- [ ] `pyproject.toml`: bump to `0.6.0`
+**Exit criteria:**
+- Each new tool has unit tests and an integration test
 
 ---
 
-## Phase 7: Release → `v1.0.0`
+## Phase 11: Security review
 
-**Goal:** Project is documented, versioned, and ready for public use.
+**Goal:** A full security check of the server, its dependencies, its container, a reference deployment and this repo, with every finding fixed or accepted in a DR. Written up as a report in `docs/reports/`; each finding gets a severity.
 
-**Dependencies:** Phase 6 complete.
+### Tasks
+- [ ] Threat model: assets (Redmine tokens, user data, signing keys), actors (users, other MCP clients, outsiders, a hostile issue text), trust boundaries
+- [ ] OAuth flow: redirect URI checks (CIMD, DCR, loopback), PKCE, consent and confused deputy, state and `iss`, token audience, lifetimes and refresh, revocation, logout
+- [ ] Token storage: encryption at rest, signing and encryption keys, key rotation, what survives a restart
+- [ ] Scope enforcement: each tool checks the scopes it needs, after refresh and restart; no over-grant (RISK-001)
+- [ ] Input handling: path and query escaping in Redmine URLs, parameter validation, size limits, errors that leak internals
+- [ ] Prompt injection: Redmine text marked as data; write tools cannot be driven by issue content alone
+- [ ] Transport and HTTP: CORS (`allow_origins=["*"]` today), Host and Origin checks, TLS between the proxy and the container, rate limiting, request size
+- [ ] Logging: no tokens, secrets or response bodies in logs; enough to trace a request
+- [ ] Dependencies: `pip-audit`, pinned versions or a lock file, licences
+- [ ] Static analysis: `bandit` and `semgrep` (or CodeQL) on the source
+- [ ] Secrets: `gitleaks` over the full git history, `.env` handling, `.dockerignore`
+- [ ] Container: non-root user, image scan (`trivy`), base image updates, filesystem permissions, healthcheck
+- [ ] Reference deployment: `.env` file permissions, direct reachability of the container port, reverse proxy or tunnel settings, Docker socket exposure; written into the deployment guide
+- [ ] GitHub repo: branch protection, Dependabot alerts, secret scanning, CodeQL, who has write access
+- [ ] Fix or accept every finding; re-run the scans
+- [ ] Phase 11 close
 
-**Success Criteria:**
-- README covers all setup steps end-to-end
-- Version is `1.0.0` and tagged in git
+**Exit criteria:**
+- The report lists every check above with its result
+- No open finding rated high or critical
+- Scans run in CI on every pull request
 
-### Documentation
-- [ ] `README.md`: finalize setup, environment variables, running, Docker, and connecting from Claude Desktop
-- [ ] `.env.example`: finalized with all variables and inline comments
+---
 
-### Release
-- [ ] Bump version to `1.0.0` in `pyproject.toml`
-- [ ] Tag `v1.0.0` in git
+## Phase 12: Release → v1.0.0
+
+**Goal:** Anyone can deploy the server from the README and a published image.
+
+### Tasks
+- [ ] Finish the README, `.env.example` and a deployment guide
+- [ ] Add a LICENSE and SECURITY.md
+- [ ] Publish the Docker image to GHCR from CI
+- [ ] CHANGELOG; bump to 1.0.0; tag `v1.0.0`
+- [ ] Phase 12 close
+
+**Exit criteria:**
+- A fresh deployment from the README and the published image works with Claude Code
 
 ---
 
 ## Backlog
 
-Ideas and requests not yet assigned to a phase. Review during phase planning.
+Unscheduled ideas. Promoted to a phase once scoped and agreed.
 
-- Push repo to GitHub and migrate backlog items to Issues
-- Per-client Redmine consent: Redmine auto-approves after first grant because all MCP clients share the same `REDMINE_CLIENT_ID`. Consider whether per-client consent is desirable (would require separate Redmine app registrations or a `force_reauthorize` param per client).
-- Configurable tools/resources via env var: allow admins to enable/disable specific tools and resources through an env file (e.g. `REDMINE_TOOLS=get_issue_details,list_issues` or `REDMINE_RESOURCES=projects/active,trackers`) so deployments can expose only a chosen subset.
+- Move to FastMCP 4.x and MCP protocol 2026-07-28 (sessionless), once 4.x settles
+- Redmine 7 webhooks
+- Consent per MCP client (today all clients share one Redmine app, so Redmine approves silently after the first grant)
+- Support for Redmine plugins such as Agile and Checklists
+- Publish to PyPI; list the server in the MCP registry
