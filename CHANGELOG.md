@@ -18,6 +18,12 @@ above it. The CHANGELOG update belongs in the **same commit** as the version bum
 
 ### Changed
 
+### Fixed
+
+## [0.5.1] — 2026-10-06
+
+### Changed
+
 - Require `fastmcp>=3.4.8`.
 
 ### Fixed
