@@ -18,4 +18,10 @@ above it. The CHANGELOG update belongs in the **same commit** as the version bum
 
 ### Changed
 
+- Require `fastmcp>=3.4.8`.
+
 ### Fixed
+
+- Claude Code could not log in: FastMCP before 3.2.0 rejected its OAuth callback
+  (`http://localhost:<port>/callback`) because the port did not match the client's
+  metadata document. FastMCP 3.2.0+ accepts any port on loopback (RFC 8252 § 7.3).
