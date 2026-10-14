@@ -162,3 +162,10 @@ Unscheduled ideas. Promoted to a phase once scoped and agreed.
 - Consent per MCP client (today all clients share one Redmine app, so Redmine approves silently after the first grant)
 - Support for Redmine plugins such as Agile and Checklists
 - Publish to PyPI; list the server in the MCP registry
+- List the projects the user can see (identifier and name)
+- List the wiki pages of a project; a wiki start page that only shows `{{child_pages}}` gives no way to find the others
+- Search wiki pages, not only issues
+- Filter `list_issues` by category and by created or updated date
+- List issue statuses, trackers and categories with their IDs, so filters can use them
+- List and read attachments on issues and wiki pages
+- Per-project permissions for an agent connection: a user connects an agent with narrower rights than their own, set per project (to be designed)
