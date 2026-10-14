@@ -5,7 +5,7 @@ One row per decision, plus a section with **Context**, **Options**, **Decision**
 | ID | Title | Status | Decision |
 |----|-------|--------|----------|
 | DR-001 | FastMCP version line | decided | `fastmcp>=3.4.8,<4`; 4.x in the backlog |
-| DR-002 | What to do with PR #2 | decided | Closed unmerged; Phase 8 redoes the work |
+| DR-002 | What to do with PR #2 | decided | Closed unmerged; WP-08 (Hardening) redoes the work |
 | DR-003 | How writes reach Redmine | decided | Link tools that open a prefilled Redmine form; write tools stay, shown only when the token holds the write scopes |
 | DR-004 | How changes are tested | decided | Every change is tested in CI, including against a real Redmine (6.1 and 7.0), before release |
 
@@ -39,7 +39,7 @@ One row per decision, plus a section with **Context**, **Options**, **Decision**
 
 **Decision.** Closed unmerged on 2026-10-06, with a comment on the PR.
 
-**Consequences.** Nothing from PR #2 is reused as code. The `/health` route and scope-based tool hiding are Phase 8 tasks.
+**Consequences.** Nothing from PR #2 is reused as code. The `/health` route and scope-based tool hiding are WP-08 (Hardening) tasks.
 
 ## DR-003 — How writes reach Redmine
 
@@ -61,7 +61,7 @@ One row per decision, plus a section with **Context**, **Options**, **Decision**
 
 **Consequences.**
 - A deployment that grants only read scopes lets agents propose changes through links and nothing more.
-- Phase 8 makes tool visibility follow the granted scopes; Phase 9 adds the link tools.
+- WP-13 (Draft tools) adds the link tools; WP-08 (Hardening) makes tool visibility follow the granted scopes.
 - Wiki changes go through the write tools where the scope allows it, or are shown as text to paste.
 
 ## DR-004 — How changes are tested
@@ -78,4 +78,4 @@ One row per decision, plus a section with **Context**, **Options**, **Decision**
 
 **Decision.** Every change is tested in CI before release: lint, type check and unit tests, plus integration tests against Redmine 6.1 and 7.0 running in Docker with seeded data and an OAuth app. Decided by the maintainer on 2026-10-06.
 
-**Consequences.** Phase 7 adds the test Redmine (compose file and seed script) and the CI workflows. New tools get an integration test.
+**Consequences.** WP-13 (Draft tools) starts CI with the unit tests on every push and pull request (maintainer, 2026-10-13). WP-07 (Repo baseline) adds the test Redmine (compose file and seed script) and the CI workflows. New tools get an integration test.

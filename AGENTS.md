@@ -25,7 +25,7 @@ A remote MCP server, built with FastMCP 3 (Python), that connects AI agents to a
 
 | File | What it holds |
 |---|---|
-| [docs/plan.md](docs/plan.md) | Phases, tasks and backlog. The source of truth for scheduled work |
+| [docs/plan.md](docs/plan.md) | Work packages (WP-NN) under Now, Next and Later, with tasks and backlog. The source of truth for scheduled work |
 | [docs/decisions.md](docs/decisions.md) | Decision records (DR-NNN) |
 | [docs/risks.md](docs/risks.md) | Risk register (RISK-NNN) |
 | [docs/reports/](docs/reports/) | Reviews and investigations |
@@ -35,7 +35,7 @@ A remote MCP server, built with FastMCP 3 (Python), that connects AI agents to a
 
 ## How We Work
 
-- **Plan first.** Work comes from `docs/plan.md`. Mark the task you work on `[-]`; one at a time. Mark it `[x]` when done, `[!]` with a reason when blocked, `[~]` with a reason when skipped. New ideas go to the backlog, agreed with the maintainer first.
+- **Plan first.** Work comes from `docs/plan.md`, in work packages: IDs are permanent, priority is the order under *Now*, *Next* and *Later*. Mark the task you work on `[-]`; one at a time. Mark it `[x]` when done, `[!]` with a reason when blocked, `[~]` with a reason when skipped. New ideas go to the backlog, agreed with the maintainer first.
 - **Decisions are written down.** A change that departs from `docs/architecture.md` or a decision record gets a DR first, then the code.
 - **Tests run before every commit:** `pytest`. CI runs them on every pull request (see the plan for the CI work).
 - **Ask before acting** on anything public (pushes, pull requests, comments, releases) or on a deployed server.
@@ -44,7 +44,7 @@ A remote MCP server, built with FastMCP 3 (Python), that connects AI agents to a
 ## Git
 
 - **Conventional Commits:** `type(scope): summary`, imperative, lower case after the colon, no trailing period, 72 characters at most. Body only when the why is not obvious.
-- **Branches:** `feature/…`, `fix/…`, `docs/…`, `chore/…`, merged into `main` through a pull request.
+- **Branches:** small changes and documents go straight to `main`. Branches (`feature/…`, `fix/…`) and pull requests are for large code changes such as feature requests, when the maintainer asks for them (maintainer, 2026-10-13).
 - **Version bump:** a standalone `chore: bump version to X.Y.Z` commit on `main` after the work merges, with the `[Unreleased]` CHANGELOG section renamed in the same commit, then an annotated tag `vX.Y.Z`.
 - **Every commit is previewed** (`git status`, `git diff --cached`, message) and made only after the maintainer confirms. Stage and commit by explicit path.
 - **Author:** `Tolga Uzun <tolgauzun@gmail.com>` (set in the clone's git config).
