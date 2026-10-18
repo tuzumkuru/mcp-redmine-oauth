@@ -55,7 +55,7 @@ One row per decision, plus a section with **Context**, **Options**, **Decision**
 | Link tools that open a prefilled Redmine form | No write by the agent; Redmine saves it as the user, with its own permissions and workflow | Not for wiki text or attachments; long text may hit the URL length limit |
 
 **Decision.**
-- Add link tools that return a prefilled Redmine form link. They need read scopes only.
+- Add link tools that return a prefilled Redmine form link. They need a login and no Redmine scope, since they call no Redmine API.
 - Keep the write tools. Each needs its write scope and is shown only when the user's token holds it, so the scopes on the Redmine OAuth app decide whether direct writes are possible.
 - No approval page.
 
