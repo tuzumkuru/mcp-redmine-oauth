@@ -198,7 +198,7 @@ Unscheduled ideas. Promoted to a work package once scoped and agreed.
 - Consent per MCP client (today all clients share one Redmine app, so Redmine approves silently after the first grant)
 - Support for Redmine plugins such as Agile and Checklists
 - Publish to PyPI; list the server in the MCP registry
-- List the projects the user can see (identifier and name)
+- List the projects the user can see (identifier and name), as a tool with paging. Today only the resource `redmine://projects/active` lists them; it sends no `limit` and reads one page, so it returns at most Redmine's default page of 25, and not every client lets the agent read resources
 - List the wiki pages of a project; a wiki start page that only shows `{{child_pages}}` gives no way to find the others
 - Search wiki pages, not only issues
 - Filter `list_issues` by category and by created or updated date
