@@ -16,35 +16,11 @@ Work is split into **work packages** (`WP-NN`). A work package's ID is given whe
 | WP-04 | Extended read operations | v0.4.0 | `list_issues`, relations, project details and versions, time entries, 2 more resources |
 | WP-05 | Write operations and prompts | v0.5.0 | Issue, project and wiki write tools; `summarize_ticket` and `draft_bug_report` prompts |
 | WP-06 | Claude Code login fix | v0.5.1 | Require `fastmcp>=3.4.8`: FastMCP before 3.2.0 rejected Claude Code's loopback callback on a random port (DR-001, [report](reports/2026-10-05-review.md)) |
+| WP-13 | Draft tools | v0.6.0 | `draft_new_issue`, `draft_issue_update` and `draft_new_project`: links to Redmine forms filled with the proposed values, nothing saved until the user submits (DR-003); `REDMINE_PUBLIC_URL`; CI runs the unit tests |
 
 ---
 
 # Now
-
-## WP-13: Draft tools
-
-**Release:** next minor version.
-
-**Goal:** Agents propose changes as links to a Redmine form filled with the proposed values; the user reviews and submits, and Redmine saves it as the user (DR-003). Moved to the front by the maintainer on 2026-10-13.
-
-### Tasks
-- [x] `draft_new_issue`: link to `/projects/<project>/issues/new` with `issue[...]` values (tracker, subject, description, priority, assignee, category, version, parent, dates, custom fields)
-- [x] `draft_issue_update`: link to `/issues/<id>/edit` with the changed `issue[...]` values and `issue[notes]`
-- [x] Links use Redmine's public URL (`REDMINE_PUBLIC_URL`, default `REDMINE_URL`); no Redmine scope, login only
-- [x] Tool descriptions tell the agent to show the link to the user and that nothing is saved until the user submits
-- [x] Link length: the descriptions give the URL length limit and ask for short text. When a link would exceed it, the tool returns a warning with the text that did not fit, for the user to paste, instead of a link that fails
-- [x] Check whether Redmine's project form also takes values from the link: the new-project form does (`ProjectsController#new`), project settings do not. Added `draft_new_project`; no update draft
-- [x] Unit tests for every link tool
-- [x] Check the links by hand against a real Redmine form: all three forms filled correctly; the new-project form needs an account allowed to add projects (maintainer, 2026-10-17). Not covered: custom fields and target version
-- [x] From the hand test: the edit form shows neither the issue's history nor the values it replaces. `draft_issue_update` also returns the issue page link, and its description asks the agent to list each change as old → new. An empty string clears a field; clearing not checked in a real form
-- [ ] Minimal CI: GitHub Actions runs the unit tests on every push and pull request (DR-004; lint, type checks and integration tests follow in WP-07)
-- [ ] README tools table; CHANGELOG; version bump
-- [ ] WP-13 close
-
-**Exit criteria:**
-- Each draft tool's link opens the Redmine form with the proposed values filled in, and nothing is saved until the user submits
-
----
 
 # Next
 

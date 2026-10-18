@@ -19,7 +19,7 @@ above it. The CHANGELOG update belongs in the **same commit** as the version bum
 
 ### Fixed
 
-## [0.6.0] — 2026-10-17
+## [0.6.0] — 2026-10-18
 
 ### Added
 
