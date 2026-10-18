@@ -28,13 +28,15 @@ Work is split into **work packages** (`WP-NN`). A work package's ID is given whe
 **Goal:** Agents propose changes as links to a Redmine form filled with the proposed values; the user reviews and submits, and Redmine saves it as the user (DR-003). Moved to the front by the maintainer on 2026-10-13.
 
 ### Tasks
-- [ ] `draft_new_issue`: link to `/projects/<project>/issues/new` with `issue[...]` values (tracker, subject, description, priority, assignee, category, version, parent, dates, custom fields)
-- [ ] `draft_issue_update`: link to `/issues/<id>/edit` with the changed `issue[...]` values and `issue[notes]`
-- [ ] Links use Redmine's public URL; read scopes only
-- [ ] Tool descriptions tell the agent to show the link to the user and that nothing is saved until the user submits
-- [ ] Link length: the descriptions give the URL length limit and ask for short text. When a link would exceed it, the tool returns a warning with the text that did not fit, for the user to paste, instead of a link that fails
-- [ ] Check whether Redmine's project form also takes values from the link; if so, add `draft_new_project` and `draft_project_update`
-- [ ] Unit tests for every link tool; check the links by hand against a real Redmine form
+- [x] `draft_new_issue`: link to `/projects/<project>/issues/new` with `issue[...]` values (tracker, subject, description, priority, assignee, category, version, parent, dates, custom fields)
+- [x] `draft_issue_update`: link to `/issues/<id>/edit` with the changed `issue[...]` values and `issue[notes]`
+- [x] Links use Redmine's public URL (`REDMINE_PUBLIC_URL`, default `REDMINE_URL`); no Redmine scope, login only
+- [x] Tool descriptions tell the agent to show the link to the user and that nothing is saved until the user submits
+- [x] Link length: the descriptions give the URL length limit and ask for short text. When a link would exceed it, the tool returns a warning with the text that did not fit, for the user to paste, instead of a link that fails
+- [x] Check whether Redmine's project form also takes values from the link: the new-project form does (`ProjectsController#new`), project settings do not. Added `draft_new_project`; no update draft
+- [x] Unit tests for every link tool
+- [x] Check the links by hand against a real Redmine form: all three forms filled correctly; the new-project form needs an account allowed to add projects (maintainer, 2026-10-17). Not covered: custom fields and target version
+- [x] From the hand test: the edit form shows neither the issue's history nor the values it replaces. `draft_issue_update` also returns the issue page link, and its description asks the agent to list each change as old → new. An empty string clears a field; clearing not checked in a real form
 - [ ] Minimal CI: GitHub Actions runs the unit tests on every push and pull request (DR-004; lint, type checks and integration tests follow in WP-07)
 - [ ] README tools table; CHANGELOG; version bump
 - [ ] WP-13 close
@@ -204,3 +206,4 @@ Unscheduled ideas. Promoted to a work package once scoped and agreed.
 - List and read attachments on issues and wiki pages
 - Journal paging in `get_issue_details`: history is capped at 25 entries (`MAX_JOURNAL_ENTRIES`) with no way to read the rest. On 2026-10-13 an issue with 53 entries hid the last 28, which held the needed information. Add `journal_offset` / `journal_limit` (or a separate paged journal tool) and keep the cap as the default. The cap keeps the oldest 25 today, so the newest entries are the ones dropped
 - Per-project permissions for an agent connection: a user connects an agent with narrower rights than their own, set per project (to be designed)
+- `draft_wiki_page`: return the wiki edit link plus the proposed text for the user to paste. Redmine's wiki edit page takes no text from the link (DR-003), so this works like the long-text fallback of the draft tools

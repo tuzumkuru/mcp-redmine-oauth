@@ -70,6 +70,7 @@ All modules live under the `mcp_redmine_oauth` package (`src/mcp_redmine_oauth/`
 | `scopes.py` | `@requires_scopes` decorator, scope registry, allowlist filter, `check_scope` helper |
 | `client.py` | Thin async HTTP client wrapping Redmine REST API; receives Bearer token per call |
 | `tools.py` | MCP tools: `get_issue_details`, `search_issues`, `list_issues`, `get_issue_relations`, `get_project_details`, `get_project_versions`, `list_time_entries`, `create_issue`, `update_issue`, `create_project`, `update_project`, `get_wiki_page`, `update_wiki_page`, `rename_wiki_page` |
+| `drafts.py` | Draft tools: `draft_new_issue`, `draft_issue_update`, `draft_new_project`. Build links to Redmine forms filled in with proposed values; they call no Redmine API (DR-003) |
 | `resources.py` | MCP resources: `projects/active`, `trackers`, `users/me`, `issue-statuses`, `enumerations/priorities` |
 | `prompts.py` | MCP prompts: `summarize_ticket`, `draft_bug_report` |
 

@@ -13,6 +13,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from mcp_redmine_oauth.auth import RedmineProvider
 from mcp_redmine_oauth.client import RedmineClient
+from mcp_redmine_oauth.drafts import register_draft_tools
 from mcp_redmine_oauth.prompts import register_prompts
 from mcp_redmine_oauth.resources import register_resources
 from mcp_redmine_oauth.scopes import get_effective_scopes, set_allowed_scopes
@@ -29,6 +30,8 @@ REDMINE_CLIENT_SECRET = os.environ["REDMINE_CLIENT_SECRET"]
 MCP_HOST = os.environ.get("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.environ.get("MCP_PORT", "8000"))
 MCP_BASE_URL = os.environ.get("MCP_BASE_URL", f"http://localhost:{MCP_PORT}")
+# Redmine URL as users reach it in a browser, for draft links (defaults to REDMINE_URL)
+REDMINE_PUBLIC_URL = os.environ.get("REDMINE_PUBLIC_URL", REDMINE_URL)
 
 # FastMCP server (auth added after tool registration so scopes can be auto-collected)
 mcp = FastMCP(
@@ -42,6 +45,7 @@ redmine = RedmineClient(base_url=REDMINE_URL)
 
 # Register MCP surface — @requires_scopes decorators populate the scope registry as a side effect
 register_tools(mcp, redmine)
+register_draft_tools(mcp, REDMINE_PUBLIC_URL)
 register_resources(mcp, redmine)
 register_prompts(mcp, redmine)
 

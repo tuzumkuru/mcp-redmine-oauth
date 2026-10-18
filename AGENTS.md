@@ -15,7 +15,7 @@ A remote MCP server, built with FastMCP 3 (Python), that connects AI agents to a
 | Redmine | 6.1+ (OAuth 2.0 provider) |
 | Auth | OAuth 2.0 authorization code; the agent acts as the logged-in user |
 | Deployment | Docker / docker compose |
-| Surface | 14 tools, 5 resources, 2 prompts |
+| Surface | 17 tools, 5 resources, 2 prompts |
 | Python | 3.11+ |
 | Source / tests | `src/mcp_redmine_oauth/` / `tests/` |
 | Version | `pyproject.toml`; see `CHANGELOG.md` |

@@ -98,6 +98,7 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 | `MCP_HOST` | No | `0.0.0.0` | Bind host |
 | `MCP_PORT` | No | `8000` | Bind port |
 | `MCP_BASE_URL` | No | `http://localhost:MCP_PORT` | Public-facing URL used for OAuth redirects |
+| `REDMINE_PUBLIC_URL` | No | `REDMINE_URL` | Redmine URL as users open it in a browser, used in draft links. Set it when the server reaches Redmine at an internal address |
 
 ## Available Tools & Resources
 
@@ -117,6 +118,9 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 | `get_wiki_page` | Tool | `view_wiki_pages` | Get a wiki page from a project |
 | `update_wiki_page` | Tool | `edit_wiki_pages` | Create or update a wiki page |
 | `rename_wiki_page` | Tool | `rename_wiki_pages` | Rename a wiki page with optional redirect |
+| `draft_new_issue` | Tool | _(login only)_ | Link to Redmine's new-issue form filled in with the proposed values; nothing is saved until the user submits |
+| `draft_issue_update` | Tool | _(login only)_ | Link to an issue's edit form with the proposed changes and comment filled in, plus a link to the issue page |
+| `draft_new_project` | Tool | _(login only)_ | Link to Redmine's new-project form filled in; works only for users allowed to add projects, or subprojects of the parent |
 | `summarize_ticket` | Prompt | `view_issues` | Generate a concise summary of an issue with next steps |
 | `draft_bug_report` | Prompt | `view_project` | Draft a structured bug report from rough notes |
 | `redmine://projects/active` | Resource | `view_project` | List active projects |

@@ -15,6 +15,10 @@ above it. The CHANGELOG update belongs in the **same commit** as the version bum
 
 ### Added
 
+- Draft tools `draft_new_issue`, `draft_issue_update` and `draft_new_project`: each returns a link to the Redmine form filled in with the proposed values. Nothing is saved until the user submits the form, and Redmine saves it as that user. Text that would make the link too long is returned separately for the user to paste.
+- `REDMINE_PUBLIC_URL`: the Redmine URL used in draft links, when it differs from `REDMINE_URL`.
+- CI: unit tests on Python 3.11 to 3.13 for every push and pull request.
+
 ### Changed
 
 ### Fixed
