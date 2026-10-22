@@ -22,6 +22,28 @@ Work is split into **work packages** (`WP-NN`). A work package's ID is given whe
 
 # Now
 
+## WP-14: Reading what Redmine already holds
+
+**Release:** next minor version.
+
+**Goal:** An agent can reach data that exists in Redmine but that the tools hide today: older history entries, issues by author, custom field IDs, all projects and the wiki. Each task is a small change to an existing tool or a thin new read tool, with read scopes only. Taken from the backlog by the maintainer on 2026-10-21, because these came up in real use.
+
+### Tasks
+- [ ] History paging in `get_issue_details`: `journal_offset` and `journal_limit` (default 25). By default show the newest 25 entries, not the oldest, and say how many earlier ones there are and how to read them
+- [ ] `list_issues`: filter by author (`author_id`, also `"me"`), category, and created or updated date; show the author and created date in each row
+- [ ] Custom field IDs in `get_issue_details`: the ID next to each name, e.g. `Brand (id 12): Apple`, and the field's name instead of its bare ID in history changes. Labels for list, user and version values stay in the backlog
+- [ ] `get_project_details`: list the project's issue custom fields with ID and name (`include=issue_custom_fields`). Check first what Redmine 6.1 returns to a user without admin rights
+- [ ] `list_projects` tool with paging (identifier, name, parent); the resource `redmine://projects/active` reads every page instead of the first 25
+- [ ] `list_wiki_pages` tool: the pages of a project's wiki (`/projects/<id>/wiki/index.json`), with parent and updated date
+- [ ] Search wiki pages: a `search_wiki_pages` tool, or a scope option on search (`wiki_pages=1`); to decide when the task starts
+- [ ] Unit tests for every change; README tools table; CHANGELOG; version bump
+- [ ] WP-14 close
+
+**Exit criteria:**
+- Each task above works against a real Redmine, and an issue with more than 25 history entries can be read in full
+
+---
+
 # Next
 
 ## WP-07: Repo baseline
@@ -174,12 +196,8 @@ Unscheduled ideas. Promoted to a work package once scoped and agreed.
 - Consent per MCP client (today all clients share one Redmine app, so Redmine approves silently after the first grant)
 - Support for Redmine plugins such as Agile and Checklists
 - Publish to PyPI; list the server in the MCP registry
-- List the projects the user can see (identifier and name), as a tool with paging. Today only the resource `redmine://projects/active` lists them; it sends no `limit` and reads one page, so it returns at most Redmine's default page of 25, and not every client lets the agent read resources
-- List the wiki pages of a project; a wiki start page that only shows `{{child_pages}}` gives no way to find the others
-- Search wiki pages, not only issues
-- Filter `list_issues` by category and by created or updated date
 - List issue statuses, trackers and categories with their IDs, so filters can use them
+- Labels for custom field values in `get_issue_details`: show the label next to the stored value of list, user and version fields (today a list value shows as a raw ID such as `304`). Reading the possible values from `/custom_fields.json` needs admin rights, so this needs another way or stays limited. WP-14 adds the field IDs
 - List and read attachments on issues and wiki pages
-- Journal paging in `get_issue_details`: history is capped at 25 entries (`MAX_JOURNAL_ENTRIES`) with no way to read the rest. On 2026-10-13 an issue with 53 entries hid the last 28, which held the needed information. Add `journal_offset` / `journal_limit` (or a separate paged journal tool) and keep the cap as the default. The cap keeps the oldest 25 today, so the newest entries are the ones dropped
 - Per-project permissions for an agent connection: a user connects an agent with narrower rights than their own, set per project (to be designed)
 - `draft_wiki_page`: return the wiki edit link plus the proposed text for the user to paste. Redmine's wiki edit page takes no text from the link (DR-003), so this works like the long-text fallback of the draft tools
