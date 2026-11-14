@@ -17,9 +17,13 @@ above it. The CHANGELOG update belongs in the **same commit** as the version bum
 
 ### Changed
 
-- `get_issue_details` pages the issue history: `journal_offset` and `journal_limit` (1 to 100, or 0 for all). By default it shows the newest 25 entries instead of the oldest 25, numbers each entry, and says which offset reads the earlier ones.
-
 ### Fixed
+
+## [0.7.0] — 2026-11-14
+
+### Changed
+
+- `get_issue_details` pages the issue history: `journal_offset` and `journal_limit` (1 to 100, or 0 for all). By default it shows the newest 25 entries instead of the oldest 25, numbers each entry, and says which offset reads the earlier ones.
 
 ## [0.6.0] — 2026-10-18
 
