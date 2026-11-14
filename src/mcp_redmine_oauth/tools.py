@@ -26,7 +26,10 @@ from mcp_redmine_oauth.scopes import (
     requires_scopes,
 )
 
-MAX_JOURNAL_ENTRIES = 25
+# History entries per get_issue_details call. Redmine returns the whole history at once
+# (GET /issues/<id>.json?include=journals has no paging), so the page is cut here.
+DEFAULT_JOURNAL_LIMIT = 25
+MAX_JOURNAL_LIMIT = 100
 
 
 def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
@@ -34,10 +37,27 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
 
     @mcp.tool()
     @requires_scopes(VIEW_ISSUES)
-    async def get_issue_details(issue_id: int) -> str:
-        """Fetch full Redmine issue details including description, custom fields,
-        and complete journal/comment history.
+    async def get_issue_details(
+        issue_id: int,
+        journal_offset: int = 0,
+        journal_limit: int = DEFAULT_JOURNAL_LIMIT,
+    ) -> str:
+        """Fetch Redmine issue details: description, custom fields and history.
+
+        The history (comments and changes) is paged, newest first: by default the
+        newest 25 entries, numbered by their position in the history. When earlier
+        entries exist, the result says which journal_offset reads them.
+
+        Args:
+            issue_id: Issue ID.
+            journal_offset: Number of newest history entries to skip (default 0).
+            journal_limit: History entries to return, 1 to 100 (default 25),
+                or 0 for the whole history.
         """
+        paging_error = _check_journal_paging(journal_offset, journal_limit)
+        if paging_error:
+            return paging_error
+
         token = get_access_token()
 
         try:
@@ -52,7 +72,7 @@ def register_tools(mcp: FastMCP, redmine: RedmineClient) -> None:
             return f"Error: issue #{issue_id} not found in Redmine."
 
         issue = data.get("issue", {})
-        return _format_issue(issue)
+        return _format_issue(issue, journal_offset, journal_limit)
 
     @mcp.tool()
     @requires_scopes(VIEW_ISSUES, SEARCH_PROJECT)
@@ -856,7 +876,23 @@ def _format_search_results(data: dict) -> str:
     return "\n".join(lines)
 
 
-def _format_issue(issue: dict) -> str:
+def _check_journal_paging(journal_offset: int, journal_limit: int) -> str | None:
+    """Return an error message for invalid history paging values, or None."""
+    if journal_offset < 0:
+        return "Error: journal_offset must be 0 or more."
+    if not 0 <= journal_limit <= MAX_JOURNAL_LIMIT:
+        return (
+            f"Error: journal_limit must be between 1 and {MAX_JOURNAL_LIMIT}, "
+            "or 0 for the whole history."
+        )
+    return None
+
+
+def _format_issue(
+    issue: dict,
+    journal_offset: int = 0,
+    journal_limit: int = DEFAULT_JOURNAL_LIMIT,
+) -> str:
     """Format a Redmine issue dict into readable text for the LLM."""
     lines = [
         f"# Issue #{issue.get('id')} — {issue.get('subject', 'No subject')}",
@@ -887,35 +923,48 @@ def _format_issue(issue: dict) -> str:
         lines.append(description)
         lines.append("")
 
-    # Journal entries (comments + changes)
-    journals = issue.get("journals", [])
-    if journals:
-        total_journals = len(journals)
-        truncated = journals[:MAX_JOURNAL_ENTRIES]
-
-        lines.append("## Journal / Comments")
-        for entry in truncated:
-            author = entry.get("user", {}).get("name", "Unknown")
-            date = entry.get("created_on", "")
-            notes = entry.get("notes", "")
-
-            details = entry.get("details", [])
-            changes = [
-                f"  - {d.get('name')}: {d.get('old_value', '')} → {d.get('new_value', '')}"
-                for d in details
-            ]
-
-            if notes or changes:
-                lines.append(f"### {author} — {date}")
-                if notes:
-                    lines.append(notes)
-                if changes:
-                    lines.extend(changes)
-                lines.append("")
-
-        if total_journals > MAX_JOURNAL_ENTRIES:
-            lines.append(
-                f"_... and {total_journals - MAX_JOURNAL_ENTRIES} more entries (truncated)._"
-            )
+    lines.extend(_format_journals(issue.get("journals", []), journal_offset, journal_limit))
 
     return "\n".join(lines)
+
+
+def _format_journals(journals: list[dict], journal_offset: int, journal_limit: int) -> list[str]:
+    """Format one page of an issue's history.
+
+    ``journal_offset`` counts back from the newest entry; ``journal_limit`` 0 means all.
+    The page is printed oldest to newest, each entry numbered by its position.
+    """
+    total = len(journals)
+    if not total:
+        return []
+    if journal_offset >= total:
+        return [
+            "## Journal / Comments",
+            f"_No entries at journal_offset={journal_offset}: the issue has {total}._",
+        ]
+
+    end = total - journal_offset
+    start = 0 if journal_limit == 0 else max(0, end - journal_limit)
+    lines = [f"## Journal / Comments (entries {start + 1}–{end} of {total})"]
+
+    for number, entry in enumerate(journals[start:end], start=start + 1):
+        author = entry.get("user", {}).get("name", "Unknown")
+        date = entry.get("created_on", "")
+        notes = entry.get("notes", "")
+        changes = [
+            f"  - {d.get('name')}: {d.get('old_value', '')} → {d.get('new_value', '')}"
+            for d in entry.get("details", [])
+        ]
+        if notes or changes:
+            lines.append(f"### #{number} {author} — {date}")
+            if notes:
+                lines.append(notes)
+            lines.extend(changes)
+            lines.append("")
+
+    if start > 0:
+        lines.append(
+            f"_{start} earlier entries not shown. "
+            f"Call get_issue_details with journal_offset={total - start} to read them._"
+        )
+    return lines

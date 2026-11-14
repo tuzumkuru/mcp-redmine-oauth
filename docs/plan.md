@@ -29,7 +29,7 @@ Work is split into **work packages** (`WP-NN`). A work package's ID is given whe
 **Goal:** An agent can reach data that exists in Redmine but that the tools hide today: older history entries, issues by author, custom field IDs, all projects and the wiki. Each task is a small change to an existing tool or a thin new read tool, with read scopes only. Taken from the backlog by the maintainer on 2026-10-21, because these came up in real use.
 
 ### Tasks
-- [ ] History paging in `get_issue_details`: `journal_offset` and `journal_limit` (default 25). By default show the newest 25 entries, not the oldest, and say how many earlier ones there are and how to read them
+- [x] History paging in `get_issue_details`: `journal_offset` and `journal_limit` (default 25). By default show the newest 25 entries, not the oldest, and say how many earlier ones there are and how to read them
 - [ ] `list_issues`: filter by author (`author_id`, also `"me"`), category, and created or updated date; show the author and created date in each row
 - [ ] Custom field IDs in `get_issue_details`: the ID next to each name, e.g. `Brand (id 12): Apple`, and the field's name instead of its bare ID in history changes. Labels for list, user and version values stay in the backlog
 - [ ] `get_project_details`: list the project's issue custom fields with ID and name (`include=issue_custom_fields`). Check first what Redmine 6.1 returns to a user without admin rights

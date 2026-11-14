@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from mcp_redmine_oauth.tools import (
-    MAX_JOURNAL_ENTRIES,
+    MAX_JOURNAL_LIMIT,
+    _check_journal_paging,
     _format_created_issue,
     _format_created_project,
     _format_issue,
@@ -95,30 +96,72 @@ def test_format_search_results_truncates_long_descriptions():
 # --- journal truncation ---
 
 
-def test_format_issue_truncates_journals():
+def _issue_with_notes(count: int) -> dict:
     journals = [
         {"user": {"name": f"User {i}"}, "created_on": "2025-01-01", "notes": f"Note {i}"}
-        for i in range(40)
+        for i in range(1, count + 1)
     ]
-    issue = {
-        "id": 1,
-        "subject": "Test",
-        "journals": journals,
-    }
-    result = _format_issue(issue)
-    assert f"Note {MAX_JOURNAL_ENTRIES - 1}" in result
-    assert f"Note {MAX_JOURNAL_ENTRIES}" not in result
-    assert "15 more entries (truncated)" in result
+    return {"id": 1, "subject": "Test", "journals": journals}
+
+
+def test_format_issue_shows_newest_journals_by_default():
+    result = _format_issue(_issue_with_notes(40))
+    assert "(entries 16–40 of 40)" in result
+    assert "### #40 User 40" in result
+    assert "### #16 User 16" in result
+    assert "### #15 User 15" not in result
+    assert "15 earlier entries not shown" in result
+    assert "journal_offset=25" in result
+
+
+def test_format_issue_second_journal_page():
+    result = _format_issue(_issue_with_notes(40), journal_offset=25)
+    assert "(entries 1–15 of 40)" in result
+    assert "### #1 User 1" in result
+    assert "### #16 User 16" not in result
+    assert "earlier entries not shown" not in result
+
+
+def test_format_issue_journal_page_is_oldest_first():
+    result = _format_issue(_issue_with_notes(3))
+    assert result.index("### #1 ") < result.index("### #2 ") < result.index("### #3 ")
+
+
+def test_format_issue_custom_journal_limit():
+    result = _format_issue(_issue_with_notes(40), journal_limit=10)
+    assert "(entries 31–40 of 40)" in result
+    assert "30 earlier entries not shown" in result
+    assert "journal_offset=10" in result
+
+
+def test_format_issue_journal_limit_zero_returns_all():
+    result = _format_issue(_issue_with_notes(40), journal_limit=0)
+    assert "(entries 1–40 of 40)" in result
+    assert "earlier entries not shown" not in result
+
+
+def test_format_issue_journal_offset_past_start():
+    result = _format_issue(_issue_with_notes(5), journal_offset=5)
+    assert "No entries at journal_offset=5: the issue has 5." in result
 
 
 def test_format_issue_no_truncation_under_limit():
-    journals = [
-        {"user": {"name": "Alice"}, "created_on": "2025-01-01", "notes": "Hello"}
-        for _ in range(5)
-    ]
-    issue = {"id": 1, "subject": "Test", "journals": journals}
-    result = _format_issue(issue)
-    assert "truncated" not in result
+    result = _format_issue(_issue_with_notes(5))
+    assert "(entries 1–5 of 5)" in result
+    assert "earlier entries not shown" not in result
+
+
+@pytest.mark.parametrize(
+    ("offset", "limit"),
+    [(-1, 25), (0, -1), (0, MAX_JOURNAL_LIMIT + 1)],
+)
+def test_check_journal_paging_rejects_invalid_values(offset, limit):
+    assert _check_journal_paging(offset, limit).startswith("Error:")
+
+
+@pytest.mark.parametrize(("offset", "limit"), [(0, 0), (0, 1), (100, MAX_JOURNAL_LIMIT)])
+def test_check_journal_paging_accepts_valid_values(offset, limit):
+    assert _check_journal_paging(offset, limit) is None
 
 
 # --- format_issue basic ---
@@ -196,9 +239,9 @@ def test_format_issue_journals():
     }
     result = _format_issue(issue)
     assert "## Journal / Comments" in result
-    assert "### Alice — 2025-01-01" in result
+    assert "### #1 Alice — 2025-01-01" in result
     assert "First comment" in result
-    assert "### Bob — 2025-01-02" in result
+    assert "### #2 Bob — 2025-01-02" in result
     assert "status_id: 1 → 2" in result
 
 
@@ -211,7 +254,7 @@ def test_format_issue_empty_journals_skipped():
         ],
     }
     result = _format_issue(issue)
-    assert "### Alice" not in result
+    assert "Alice" not in result
 
 
 # --- list_issues formatting ---

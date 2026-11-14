@@ -104,7 +104,7 @@ Set `MCP_HOST_PORT` in `.env` to change the host-side port (default `8000`).
 
 | Component | Type | Required Scopes | Description |
 |---|---|---|---|
-| `get_issue_details` | Tool | `view_issues` | Fetch a Redmine issue by ID with description, custom fields, and journals |
+| `get_issue_details` | Tool | `view_issues` | Fetch a Redmine issue by ID with description, custom fields, and its history, paged newest first (`journal_offset`, `journal_limit`) |
 | `search_issues` | Tool | `view_issues`, `search_project` | Full-text search across issues with pagination |
 | `list_issues` | Tool | `view_issues` | List issues with filters (project, assignee, status, tracker, sort) |
 | `get_issue_relations` | Tool | `view_issues` | Get issue relations (blocking, blocked-by, related, etc.) |

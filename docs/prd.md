@@ -40,7 +40,7 @@ A remote MCP server that exposes Redmine's REST API to AI agents via OAuth 2.0. 
 | Tool | Inputs | Action |
 |---|---|---|
 | `search_issues` | `query` (str), `project_id` (int, opt), `status_id` (int/str, opt) | Search issues matching criteria |
-| `get_issue_details` | `issue_id` (int) | Fetch full issue with description, custom fields, and journal history |
+| `get_issue_details` | `issue_id` (int), `journal_offset`, `journal_limit` | Fetch full issue with description, custom fields, and journal history, paged newest first |
 | `create_issue` | `project_id` (int), `tracker_id` (int), `subject` (str), `description` (str), `priority_id` (int, opt) | Create a new issue as the authenticated user |
 | `update_issue` | `issue_id` (int), `notes` (str, opt), `status_id` (int, opt), `assignee_id` (int, opt) | Update issue state or add a comment |
 
